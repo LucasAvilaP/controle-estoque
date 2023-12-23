@@ -1,0 +1,86 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{% static 'autenticacao/css/style.css' %}" type"text/css">
+    <link rel="stylesheet" href="{% static 'autenticacao/css/media-query.css' %}" type="text/css">
+    <title>Pagina Inicial</title>
+</head>
+
+<body>
+    <section class="main-login">
+        <div class="left-login">
+            <h1>Faça Login <br> Acesse ao sistema</h1>
+            <img src="{% static 'autenticacao/images/computer-login-animate.svg' %}" alt="imagem">
+        </div>
+
+        <div class="right-login">
+            <div class="card-login">
+                <h1>LOGIN</h1>
+                <form id="form-login" method="POST">
+                    {% csrf_token %}
+                    <div class="textfield">
+                        <label for="usuario">Usuário</label>
+                        <input type="text" id="username" name="username" placeholder="nome.sobrenome">
+                    </div>
+
+                    <div class="textfield">
+                        <label for="senha">Senha</label>
+                        <input type="password" id="password" name="password" placeholder="Senha">
+                    </div>
+                    <button type="submit" class="btn-login">Login</button>
+                </form>
+
+                <h5>Dúvidas? Fale conosco: </h5> <br>
+                <a href="https://api.whatsapp.com/send?phone=5521971523095" target="_blank"><i class="bi bi-whatsapp"></i>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        document.getElementById('form-login').addEventListener('submit', function(e) {
+            e.preventDefault();
+        
+            // Criar um objeto FormData baseado no formulário existente
+            var formData = new FormData(this);
+            formData.append('username', document.getElementById('usuario').value);
+            formData.append('password', document.getElementById('senha').value);
+        
+            // Se você está recebendo o CSRF token do cookie, você pode pegá-lo assim:
+            var csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        
+            fetch('/login_page/', { // Certifique-se de que esta URL corresponda exatamente ao que você definiu no Django
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken // Incluir o CSRF token
+                },
+                body: formData,
+                credentials: 'same-origin' // Necessário para incluir cookies CSRF
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Erro no login');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.message === 'Login bem-sucedido') {
+                    // Redirecionar para a página indicada pela resposta do servidor
+                    window.location.href = data.redirect;
+                } else {
+                    alert(data.error);
+                }
+            })
+        
+    </script>
+
+
+</body>
+
+</html>
