@@ -31,11 +31,12 @@
 
       <div class="textfield">
         <label for="produto">Produto:</label>
-        <input type="text" id="campo_produto" placeholder="Digite o produto" list="lista_sugestoes" oninput="buscarProduto()">
-        <datalist id="lista_sugestoes">
-           
-        </datalist>
+        <input type="text" id="campo_produto" placeholder="Digite o produto" oninput="buscarProduto()">
+        <div id="lista_sugestoes" class="lista-sugestoes">
+          <!-- As sugestões serão inseridas aqui pelo JavaScript -->
+        </div>
       </div>
+      
 
       <div class="textfield">
         <label for="data">Data:</label>
@@ -66,23 +67,44 @@
     function buscarProduto() {
       var termo = document.getElementById('campo_produto').value;
       var listaSugestoes = document.getElementById('lista_sugestoes');
-  
-      if (termo.length >= 2) {
-          fetch(`/pagina_inicial/buscar-produtos/?termo=${encodeURIComponent(termo)}`)
-              .then(response => response.json())
-              .then(data => {
-                  listaSugestoes.innerHTML = '';  // Limpa a lista de sugestões anterior
-                  data.forEach((nomeProduto) => {
-                      var option = document.createElement('option');
-                      option.value = nomeProduto;
-                      listaSugestoes.appendChild(option);
-                  });
-              })
-              .catch(error => console.error('Erro:', error));
-      } else {
-          listaSugestoes.innerHTML = '';  // Limpa a lista se o termo for muito curto
+    
+      while (listaSugestoes.firstChild) {
+        listaSugestoes.removeChild(listaSugestoes.firstChild);
       }
-  }
+    
+      if (termo.length >= 2) {
+        fetch(`/pagina_inicial/buscar-produtos/?termo=${encodeURIComponent(termo)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.length) {
+                  listaSugestoes.classList.add('visible');
+                } else {
+                  listaSugestoes.classList.remove('visible');
+                }
+                data.forEach((nomeProduto) => {
+                    var div = document.createElement('div');
+                    div.textContent = nomeProduto;
+                    div.onclick = function() {
+                      document.getElementById('campo_produto').value = nomeProduto;
+                      listaSugestoes.classList.remove('visible');
+                    };
+                    listaSugestoes.appendChild(div);
+                });
+            })
+            .catch(error => console.error('Erro:', error));
+      } else {
+        listaSugestoes.classList.remove('visible');
+      }
+    }
+    
+    document.addEventListener('click', function(e) {
+      var listaSugestoes = document.getElementById('lista_sugestoes');
+      if (e.target.id !== 'campo_produto' && !listaSugestoes.contains(e.target)) {
+        listaSugestoes.classList.remove('visible');
+      }
+    });
+    
+
     </script>
 
 
