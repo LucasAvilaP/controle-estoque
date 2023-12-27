@@ -20,7 +20,18 @@
       type="text/css"
     />
 
-      <nav class="btn-geral">
+
+    <title>Santo Scenarium</title>
+  </head>
+
+  <body>
+    
+    <section class="main-login">
+      <div class="card-login">
+        <h1>Gerenciamento de utensílios</h1>
+
+
+        <nav class="btn-geral">
         <ul class="btn-list">
           <li><button onclick="adicionarQuantidade()">Adicionar</button></li>
           <li>Registrar perda</li>
@@ -28,21 +39,6 @@
           <li>Deletar</li>
         </ul>
       </nav>
-
-    <title>Santo Scenarium</title>
-  </head>
-
-  <body>
-    <section class="main-login">
-      <div class="card-login">
-        <h1>Gerenciamento de utensílios</h1>
-
-        <nav class="btn-geral">
-          <ul class="btn-list">
-            <li>Adicionar</li>
-            <li>Registrar perda</li>
-          </ul>
-        </nav>
 
         <div class="textfield">
           <label for="produto">Produto:</label>
@@ -77,8 +73,8 @@
           <label for="quantidade">Quantidade: </label>
           <input
             type="number"
-            name="quantidade"
-            id="quantidade"
+            name="campo_quantidade"
+            id="campo_quantidade"
             placeholder="Quantidade a ser adicionada"
             required
           />
@@ -93,31 +89,8 @@
       </div>
     </section>
 
-    <script>
-      function buscarProduto() {
-        var termo = document.getElementById('campo_produto').value;
-        var listaSugestoes = document.getElementById('lista_sugestoes');
-
-        while (listaSugestoes.firstChild) {
-          listaSugestoes.removeChild(listaSugestoes.firstChild);
-        }
-
-      <div class="textfield">
-        <label for="quantidade">Quantidade: </label>
-        <input type="number" name="quantidade" id="campo_quantidade" placeholder="Quantidade a ser adicionada" required>
-      </div>
-
-      <div class="textfield">
-        <label for="mensagem">Sua mensagem</label>
-        <textarea name="mensagem" id="mensagem" cols="30" rows="5"></textarea>
-      </div>
-
-      <button class="btn-login">Exportar</button>
-    </div>
-
-  </section>
-
   <script>
+
     function buscarProduto() {
       var termo = document.getElementById('campo_produto').value;
       var listaSugestoes = document.getElementById('lista_sugestoes');
@@ -134,23 +107,31 @@
                   listaSugestoes.classList.add('visible');
                 } else {
                   listaSugestoes.classList.remove('visible');
-                };
-                listaSugestoes.appendChild(div);
-              });
+                }
+                data.forEach((nomeProduto) => {
+                    var div = document.createElement('div');
+                    div.textContent = nomeProduto;
+                    div.onclick = function() {
+                      document.getElementById('campo_produto').value = nomeProduto;
+                      listaSugestoes.classList.remove('visible');
+                    };
+                    listaSugestoes.appendChild(div);
+                });
             })
-            .catch((error) => console.error('Erro:', error));
-        } else {
-          listaSugestoes.classList.remove('visible');
-        }
+            .catch(error => console.error('Erro:', error));
+      } else {
+        listaSugestoes.classList.remove('visible');
       }
     }
     
+    // Clique fora das sugestões para esconder a lista
     document.addEventListener('click', function(e) {
       var listaSugestoes = document.getElementById('lista_sugestoes');
-      if (e.target.id !== 'campo_produto' && !listaSugestoes.contains(e.target)) {
+      if (!listaSugestoes.contains(e.target)) {
         listaSugestoes.classList.remove('visible');
       }
     });
+    
 
 
     function getCookie(name) {
@@ -169,22 +150,22 @@
   }
 
 
-  const csrftoken = getCookie('csrftoken')
+    const csrftoken = getCookie('csrftoken')
 
 
     function adicionarQuantidade() {
       // Obter os valores dos inputs
       var nomeProduto = document.getElementById('campo_produto').value;
       var quantidadeAdicionar = document.getElementById('campo_quantidade').value;
-      
+        
       // Verificar se os campos estão preenchidos
       if (!nomeProduto || !quantidadeAdicionar) {
         alert('Por favor, preencha todos os campos.');
         return;
       }
-    
-      // Enviar requisição para o servidor
-      fetch('atualizar_quantidade/', {
+      
+        // Enviar requisição para o servidor
+       fetch('atualizar_quantidade/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -192,35 +173,23 @@
           'X-CSRFToken': csrftoken
         },
         body: JSON.stringify({
-          nome: nomeProduto,
-          quantidade: quantidadeAdicionar
+           nome: nomeProduto,
+           quantidade: quantidadeAdicionar
         })
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
+       })
+       .then(response => response.json())
+       .then(data => {
+         if (data.success) {
           alert('Quantidade atualizada com sucesso.');
         } else {
-          alert('Erro ao atualizar quantidade: ' + data.error);
+           alert('Erro ao atualizar quantidade: ' + data.error);
         }
       })
       .catch(error => {
         console.error('Erro na requisição:', error);
-      });
+       });
     }
-    
-
-
-
-      document.addEventListener('click', function (e) {
-        var listaSugestoes = document.getElementById('lista_sugestoes');
-        if (
-          e.target.id !== 'campo_produto' &&
-          !listaSugestoes.contains(e.target)
-        ) {
-          listaSugestoes.classList.remove('visible');
-        }
-      });
+      
     </script>
   </body>
 </html>
