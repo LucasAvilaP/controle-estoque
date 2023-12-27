@@ -21,7 +21,7 @@
 
       <nav class="btn-geral">
         <ul class="btn-list">
-          <li>Adicionar</li>
+          <li><button onclick="adicionarQuantidade()">Adicionar</button></li>
           <li>Registrar perda</li>
           <li>Procurar</li>
           <li>Deletar</li>
@@ -50,7 +50,7 @@
 
       <div class="textfield">
         <label for="quantidade">Quantidade: </label>
-        <input type="number" name="quantidade" id="quantidade" placeholder="Quantidade a ser adicionada" required>
+        <input type="number" name="quantidade" id="campo_quantidade" placeholder="Quantidade a ser adicionada" required>
       </div>
 
       <div class="textfield">
@@ -103,7 +103,66 @@
         listaSugestoes.classList.remove('visible');
       }
     });
+
+
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+          const cookies = document.cookie.split(';');
+          for (let i = 0; i < cookies.length; i++) {
+              const cookie = cookies[i].trim();
+              if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                  cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                  break;
+              }
+          }
+      }
+      return cookieValue;
+  }
+
+
+  const csrftoken = getCookie('csrftoken')
+
+
+    function adicionarQuantidade() {
+      // Obter os valores dos inputs
+      var nomeProduto = document.getElementById('campo_produto').value;
+      var quantidadeAdicionar = document.getElementById('campo_quantidade').value;
+      
+      // Verificar se os campos estão preenchidos
+      if (!nomeProduto || !quantidadeAdicionar) {
+        alert('Por favor, preencha todos os campos.');
+        return;
+      }
     
+      // Enviar requisição para o servidor
+      fetch('atualizar_quantidade/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          // Adicione aqui o token CSRF se for necessário
+          'X-CSRFToken': csrftoken
+        },
+        body: JSON.stringify({
+          nome: nomeProduto,
+          quantidade: quantidadeAdicionar
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          alert('Quantidade atualizada com sucesso.');
+        } else {
+          alert('Erro ao atualizar quantidade: ' + data.error);
+        }
+      })
+      .catch(error => {
+        console.error('Erro na requisição:', error);
+      });
+    }
+    
+
+
 
     </script>
 

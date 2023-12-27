@@ -27,16 +27,18 @@ def login_page(request):
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
-        # Depuração: Imprimir os valores para verificar
-        print("Tentativa de login com:", username, password)
+        
         user = authenticate(request, username=username, password=password)
         if user is not None:
             if user.is_active:
                 login(request, user)
                 return redirect('pagina_inicial')
             else:
-                return JsonResponse({'error': 'Conta inativa'}, status=400)
+                # Conta está inativa, renderize a mesma página com a mensagem de erro
+                return render(request, 'autenticacao/login.html', {'error': 'Sua conta está inativa.'})
         else:
-            return JsonResponse({'error': 'Login inválido'}, status=400)
+            # Login inválido, renderize a mesma página com a mensagem de erro
+            return render(request, 'autenticacao/login.html', {'error': 'Usuário ou senha inválidos.'})
     else:
+        # Método GET, simplesmente renderize a página de login sem mensagens de erro
         return render(request, 'autenticacao/login.html')
