@@ -5,7 +5,7 @@ import xlsxwriter
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponse
-from produtos.models import Produto  # Ajuste o caminho do import conforme necessário
+from produtos.models import Produto, HistoricoContagem
 from django.views.decorators.csrf import csrf_exempt
 import json
 
@@ -70,12 +70,19 @@ def exportar_produtos_xlsx(request):
 
     # Escreve o cabeçalho
     worksheet.write('A1', 'Nome do Produto')
-    worksheet.write('B1', 'Quantidade')
+    worksheet.write('B1', 'Quantidade Atual')
+    worksheet.write('C1', 'Última Contagem')
+    worksheet.write('D1', 'Diferença')
 
     # Escreve os dados dos produtos
-    for idx, produto in enumerate(Produto.objects.all().values_list('nome', 'quantidade'), start=1):
-        worksheet.write_string(idx, 0, produto[0]) # Nome do produto
-        worksheet.write_number(idx, 1, produto[1]) # Quantidade
+    for idx, produto in enumerate(Produto.objects.all(), start=2):
+        ultima_contagem = HistoricoContagem.objects.filter(produto=produto, data_contagem__lt=hoje).order_by('-data_contagem').first()
+        diferenca = produto.quantidade - (ultima_contagem.quantidade_contagem if ultima_contagem else 0)
+
+        worksheet.write_string(idx, 0, produto.nome)
+        worksheet.write_number(idx, 1, produto.quantidade)
+        worksheet.write_number(idx, 2, ultima_contagem.quantidade_contagem if ultima_contagem else '-')
+        worksheet.write_number(idx, 3, diferenca)
 
     # Fecha o arquivo Excel
     workbook.close()
