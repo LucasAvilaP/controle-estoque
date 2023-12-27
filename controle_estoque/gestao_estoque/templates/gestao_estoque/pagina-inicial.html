@@ -20,7 +20,6 @@
       type="text/css"
     />
 
-<<<<<<< HEAD
       <nav class="btn-geral">
         <ul class="btn-list">
           <li><button onclick="adicionarQuantidade()">Adicionar</button></li>
@@ -29,13 +28,6 @@
           <li>Deletar</li>
         </ul>
       </nav>
-=======
-    <link
-      rel="stylesheet"
-      href="{% static 'autenticacao/css/media-query.css' %}"
-      type="text/css"
-    />
->>>>>>> 40fb25b4c58c179df46f66d41b7d462ea5bbe267
 
     <title>Santo Scenarium</title>
   </head>
@@ -110,7 +102,6 @@
           listaSugestoes.removeChild(listaSugestoes.firstChild);
         }
 
-<<<<<<< HEAD
       <div class="textfield">
         <label for="quantidade">Quantidade: </label>
         <input type="number" name="quantidade" id="campo_quantidade" placeholder="Quantidade a ser adicionada" required>
@@ -142,26 +133,6 @@
                 if (data.length) {
                   listaSugestoes.classList.add('visible');
                 } else {
-=======
-        if (termo.length >= 2) {
-          fetch(
-            `/pagina_inicial/buscar-produtos/?termo=${encodeURIComponent(
-              termo,
-            )}`,
-          )
-            .then((response) => response.json())
-            .then((data) => {
-              if (data.length) {
-                listaSugestoes.classList.add('visible');
-              } else {
-                listaSugestoes.classList.remove('visible');
-              }
-              data.forEach((nomeProduto) => {
-                var div = document.createElement('div');
-                div.textContent = nomeProduto;
-                div.onclick = function () {
-                  document.getElementById('campo_produto').value = nomeProduto;
->>>>>>> 40fb25b4c58c179df46f66d41b7d462ea5bbe267
                   listaSugestoes.classList.remove('visible');
                 };
                 listaSugestoes.appendChild(div);
@@ -172,7 +143,6 @@
           listaSugestoes.classList.remove('visible');
         }
       }
-<<<<<<< HEAD
     }
     
     document.addEventListener('click', function(e) {
@@ -241,8 +211,6 @@
     
 
 
-=======
->>>>>>> 40fb25b4c58c179df46f66d41b7d462ea5bbe267
 
       document.addEventListener('click', function (e) {
         var listaSugestoes = document.getElementById('lista_sugestoes');
