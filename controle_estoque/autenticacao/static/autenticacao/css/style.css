@@ -61,6 +61,13 @@
   font-weight: 800;
 }
 
+.form-class {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 50%;
+}
+
 .textfield {
   width: 100%;
   display: flex;
@@ -128,5 +135,3 @@
   background: transparent;
   color: white;
 }
-
-
