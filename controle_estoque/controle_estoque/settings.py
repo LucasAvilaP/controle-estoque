@@ -131,4 +131,4 @@ SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
 
 LOGIN_URL = '/login_page/'
 
-SESSION_COOKIE_AGE = 300  # 5 minutos
+#SESSION_COOKIE_AGE = 300  # 5 minutos
