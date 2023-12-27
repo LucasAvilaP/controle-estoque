@@ -34,7 +34,7 @@
         <nav class="btn-geral">
         <ul class="btn-list">
           <li><button onclick="adicionarQuantidade()">Adicionar</button></li>
-          <li>Registrar perda</li>
+          <li><button onclick="diminuirQuantidade()">Registrar Perda</button></li>
           <li>Procurar</li>
           <li>Deletar</li>
         </ul>
@@ -175,6 +175,43 @@
         body: JSON.stringify({
            nome: nomeProduto,
            quantidade: quantidadeAdicionar
+        })
+       })
+       .then(response => response.json())
+       .then(data => {
+         if (data.success) {
+          alert('Quantidade atualizada com sucesso.');
+        } else {
+           alert('Erro ao atualizar quantidade: ' + data.error);
+        }
+      })
+      .catch(error => {
+        console.error('Erro na requisição:', error);
+       });
+    }
+
+    function diminuirQuantidade() {
+      // Obter os valores dos inputs
+      var nomeProduto = document.getElementById('campo_produto').value;
+      var quantidadeDiminuir = document.getElementById('campo_quantidade').value;
+        
+      // Verificar se os campos estão preenchidos
+      if (!nomeProduto || !quantidadeDiminuir) {
+        alert('Por favor, preencha todos os campos.');
+        return;
+      }
+      
+        // Enviar requisição para o servidor
+       fetch('diminuir_quantidade/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          // Adicione aqui o token CSRF se for necessário
+          'X-CSRFToken': csrftoken
+        },
+        body: JSON.stringify({
+           nome: nomeProduto,
+           quantidade: quantidadeDiminuir
         })
        })
        .then(response => response.json())

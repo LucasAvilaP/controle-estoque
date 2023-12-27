@@ -37,3 +37,21 @@ def atualizar_quantidade(request):
             return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
     return JsonResponse({'success': False, 'error': 'Método não permitido.'}, status=405)
+
+def diminuir_quantidade(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        nome_produto = data.get('nome')
+        quantidade_adicionar = int(data.get('quantidade'))
+        
+        try:
+            produto = Produto.objects.get(nome__iexact=nome_produto)
+            produto.quantidade -= quantidade_adicionar
+            produto.save()
+            return JsonResponse({'success': True})
+        except Produto.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Produto não encontrado.'}, status=404)
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+    return JsonResponse({'success': False, 'error': 'Método não permitido.'}, status=405)

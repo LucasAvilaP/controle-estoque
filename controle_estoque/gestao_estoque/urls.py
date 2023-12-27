@@ -3,12 +3,13 @@
 from django.urls import path
 from . import views
 from django.urls import path
-from .views import buscar_produtos, atualizar_quantidade
+from .views import buscar_produtos, atualizar_quantidade, diminuir_quantidade
 
 urlpatterns = [
     path('', views.pagina_inicial, name='pagina_inicial'),
     path('buscar-produtos/', views.buscar_produtos, name='buscar_produtos'),
     path('atualizar_quantidade/', views.atualizar_quantidade, name='atualizar_quantidade'),
+    path('diminuir_quantidade/', views.diminuir_quantidade, name='diminuir_quantidade'),
 
 ]
 
