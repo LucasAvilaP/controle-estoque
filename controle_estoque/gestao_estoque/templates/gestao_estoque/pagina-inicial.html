@@ -85,7 +85,7 @@
           <textarea name="mensagem" id="mensagem" cols="30" rows="5"></textarea>
         </div>
 
-        <button class="btn-login">Exportar</button>
+        <button id="btnExportar" class"btn-login">Exportar</button>
       </div>
     </section>
 
@@ -226,7 +226,36 @@
         console.error('Erro na requisição:', error);
        });
     }
-      
+    
+    document.getElementById('btnExportar').addEventListener('click', function() {
+      fetch('exportar_produtos_xlsx/')
+        .then(response => {
+          if (response.ok) {
+            return response.blob();
+          } else {
+            throw new Error('Ocorreu um erro ao gerar o arquivo de exportação.');
+          }
+        })
+        .then(blob => {
+          // Cria um link temporário para fazer o download do arquivo blob
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.style.display = 'none';
+          a.href = url;
+          // Define o nome do arquivo para download
+          a.download = 'produtos_exportados.xlsx';
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          alert('Exportação concluída!');
+        })
+        .catch(error => {
+          console.error('Erro na exportação:', error);
+          alert(error.message);
+        });
+    });
+
+
     </script>
   </body>
 </html>
