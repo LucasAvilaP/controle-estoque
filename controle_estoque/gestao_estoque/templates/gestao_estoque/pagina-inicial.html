@@ -54,9 +54,9 @@
         </div>
 
         <div class="textfield">
-          <label for="data">Data:</label>
-          <input type="datetime-local" name="data" id="data" />
-        </div>
+          <label for="campo_data">Data:</label>
+          <input type="date" id="campo_data" name="data_contagem">
+      </div>
 
         <div class="textfield">
           <label for="tipo">Tipo: </label>
@@ -75,13 +75,13 @@
             type="number"
             name="campo_quantidade"
             id="campo_quantidade"
-            placeholder="Quantidade a ser adicionada"
+            placeholder="Quantidade a ser adicionada ou retirada"
             required
           />
         </div>
 
         <div class="textfield">
-          <label for="mensagem">Sua mensagem</label>
+          <label for="mensagem">Mensagem</label>
           <textarea name="mensagem" id="mensagem" cols="30" rows="5"></textarea>
         </div>
 
@@ -157,9 +157,10 @@
       // Obter os valores dos inputs
       var nomeProduto = document.getElementById('campo_produto').value;
       var quantidadeAdicionar = document.getElementById('campo_quantidade').value;
+      var dataContagem = document.getElementById('campo_data').value;
         
       // Verificar se os campos estão preenchidos
-      if (!nomeProduto || !quantidadeAdicionar) {
+      if (!nomeProduto || !quantidadeAdicionar || !dataContagem) {
         alert('Por favor, preencha todos os campos.');
         return;
       }
@@ -174,21 +175,22 @@
         },
         body: JSON.stringify({
            nome: nomeProduto,
-           quantidade: quantidadeAdicionar
+           quantidade: quantidadeAdicionar,
+           data_contagem: dataContagem
         })
        })
        .then(response => response.json())
-       .then(data => {
-         if (data.success) {
-          alert('Quantidade atualizada com sucesso.');
+    .then(data => {
+        if (data.success) {
+            alert('Quantidade atualizada com sucesso.');
         } else {
-           alert('Erro ao atualizar quantidade: ' + data.error);
+            alert('Erro ao atualizar quantidade: ' + data.error);
         }
-      })
-      .catch(error => {
+    })
+    .catch(error => {
         console.error('Erro na requisição:', error);
-       });
-    }
+    });
+}
 
     function diminuirQuantidade() {
       // Obter os valores dos inputs
