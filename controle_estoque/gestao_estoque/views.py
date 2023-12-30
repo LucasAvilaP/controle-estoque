@@ -11,6 +11,7 @@ from produtos.models import Produto, HistoricoContagem
 from django.views.decorators.csrf import csrf_exempt
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from .models import HistoricoLog
 from django.utils import timezone
 from django.db import models
 import json
@@ -45,11 +46,16 @@ def atualizar_quantidade(request):
         # produto.quantidade = quantidade_adicionar  # Se você deseja definir uma nova quantidade
         produto.save()
 
-        # Verifique se a data_contagem é fornecida e é uma string de data válida, caso contrário, use a data atual
-        if data_contagem:
-            data_contagem = timezone.datetime.strptime(data_contagem, '%Y-%m-%d').date()
-        else:
-            data_contagem = timezone.now().date()
+        data_contagem = timezone.datetime.strptime(data_contagem, '%Y-%m-%d').date() if data_contagem else timezone.now().date()
+
+
+        HistoricoLog.objects.create(
+            produto=produto,
+            usuario=request.user,
+            quantidade=quantidade_adicionar,
+            tipo='Adição',
+            data_hora=timezone.now()  # Ou use a data_contagem se necessário
+        )
 
         # Criar um novo registro de contagem no histórico
         HistoricoContagem.objects.create(
@@ -65,6 +71,7 @@ def atualizar_quantidade(request):
         return JsonResponse({'success': False, 'error': 'Formato de data inválido.'}, status=400)
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
+   
 
 def diminuir_quantidade(request):
     if request.method == 'POST':
@@ -76,6 +83,14 @@ def diminuir_quantidade(request):
             produto = Produto.objects.get(nome__iexact=nome_produto)
             produto.quantidade -= quantidade_adicionar
             produto.save()
+
+            HistoricoLog.objects.create(
+              produto=produto,
+              usuario=request.user,
+              quantidade=quantidade_adicionar,
+              tipo='Subtração'
+          )
+
             return JsonResponse({'success': True})
         except Produto.DoesNotExist:
             return JsonResponse({'success': False, 'error': 'Produto não encontrado.'}, status=404)
@@ -83,6 +98,9 @@ def diminuir_quantidade(request):
             return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
     return JsonResponse({'success': False, 'error': 'Método não permitido.'}, status=405)
+
+
+    
 
 
 def exportar_produtos_xlsx(request):
