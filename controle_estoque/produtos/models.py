@@ -6,6 +6,7 @@ class Produto(models.Model):
     data_entrada = models.DateField()
     tipo = models.CharField(max_length=100)
     quantidade = models.IntegerField()  # Isto vai representar a quantidade atual
+    nivel_minimo = models.IntegerField(default=15)  # Um valor padrão de 0 significa que não há mínimo definido
 
     def __str__(self):
         return self.nome

@@ -33,6 +33,7 @@
   box-shadow: 0px 10px 40px #00000056;
   outline: none;
   box-sizing: border-box;
+  resize: none;
 }
 
 .lista-sugestoes {
@@ -44,6 +45,7 @@
   box-shadow: 0px 4px 5px rgba(0,0,0,0.2); /* Sombra opcional para destacar a lista */
   z-index: 1000; /* Garantir que a lista apareça sobre outros elementos */
   border-radius: 4px; /* Cantos arredondados para a lista de sugestões */
+
 }
 
 .lista-sugestoes div {

@@ -79,10 +79,14 @@
             required
           />
         </div>
-
+        
         <div class="textfield">
-          <label for="mensagem">Mensagem</label>
-          <textarea name="mensagem" id="mensagem" cols="30" rows="5"></textarea>
+          <label for="mensagem">Alertas</label>
+          <textarea name="mensagem" id="alertas" cols="30" rows="5">
+            {% for alerta in alertas %}
+            {{ alerta }}
+            {% endfor %}
+          </textarea>
         </div>
 
         <button id="btnExportar" class"btn-login">Exportar</button>
@@ -183,6 +187,7 @@
     .then(data => {
         if (data.success) {
             alert('Quantidade atualizada com sucesso.');
+            window.location.reload(); // Recarrega a página
         } else {
             alert('Erro ao atualizar quantidade: ' + data.error);
         }
@@ -220,6 +225,7 @@
        .then(data => {
          if (data.success) {
           alert('Quantidade atualizada com sucesso.');
+          window.location.reload(); // Recarrega a página
         } else {
            alert('Erro ao atualizar quantidade: ' + data.error);
         }

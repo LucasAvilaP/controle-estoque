@@ -12,13 +12,17 @@ from django.views.decorators.csrf import csrf_exempt
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
+from django.db import models
 import json
 
 
 
 @login_required
 def pagina_inicial(request):
-    return render(request, 'gestao_estoque/pagina-inicial.html')
+    produtos_abaixo_do_minimo = Produto.objects.filter(quantidade__lt=models.F('nivel_minimo'))
+    alertas = [f"O produto {produto.nome} está abaixo do nível mínimo de estoque!" for produto in produtos_abaixo_do_minimo]
+
+    return render(request, 'gestao_estoque/pagina-inicial.html', {'alertas': alertas})
 
 
 def buscar_produtos(request):
