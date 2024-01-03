@@ -15,15 +15,12 @@
   cursor: pointer;
 }
 
-.card-login .btn-list li,
-button {
+.card-login .btn-list li {
   background: #77ffc0;
   padding: 10px;
   text-align: center;
   border-radius: 8px;
   text-transform: uppercase;
-  cursor: pointer;
-  list-style: none;
 }
 
 .textfield textarea {
