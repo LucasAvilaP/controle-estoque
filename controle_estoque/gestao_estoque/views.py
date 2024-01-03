@@ -88,7 +88,7 @@ def diminuir_quantidade(request):
               produto=produto,
               usuario=request.user,
               quantidade=quantidade_adicionar,
-              tipo='Subtração'
+              tipo='Remoção'
           )
 
             return JsonResponse({'success': True})
