@@ -32,13 +32,10 @@ def login_page(request):
         if user is not None:
             if user.is_active:
                 login(request, user)
-                return redirect('pagina_inicial')
+                return JsonResponse({'redirect': True, 'redirect_url': '/pagina_inicial/'})
             else:
-                # Conta está inativa, renderize a mesma página com a mensagem de erro
-                return render(request, 'autenticacao/login.html', {'error': 'Sua conta está inativa.'})
+                return JsonResponse({'error': 'Sua conta está inativa.'}, status=400)
         else:
-            # Login inválido, renderize a mesma página com a mensagem de erro
-            return render(request, 'autenticacao/login.html', {'error': 'Usuário ou senha inválidos.'})
+            return JsonResponse({'error': 'Usuário ou senha inválidos.'}, status=400)
     else:
-        # Método GET, simplesmente renderize a página de login sem mensagens de erro
         return render(request, 'autenticacao/login.html')

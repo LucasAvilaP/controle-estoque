@@ -20,29 +20,25 @@
       type="text/css"
     />
 
-      <nav class="btn-geral">
-        <ul class="btn-list">
-          <li><button onclick="adicionarQuantidade()">Adicionar</button></li>
-          <li>Registrar perda</li>
-          <li>Procurar</li>
-          <li>Deletar</li>
-        </ul>
-      </nav>
 
     <title>Santo Scenarium</title>
   </head>
 
   <body>
+    
     <section class="main-login">
       <div class="card-login">
         <h1>Gerenciamento de utensílios</h1>
 
+
         <nav class="btn-geral">
-          <ul class="btn-list">
-            <li>Adicionar</li>
-            <li>Registrar perda</li>
-          </ul>
-        </nav>
+        <ul class="btn-list">
+          <li><button onclick="adicionarQuantidade()">Adicionar</button></li>
+          <li><button onclick="diminuirQuantidade()">Registrar Perda</button></li>
+          <li>Procurar</li>
+          <li>Deletar</li>
+        </ul>
+      </nav>
 
         <div class="textfield">
           <label for="produto">Produto:</label>
@@ -58,9 +54,9 @@
         </div>
 
         <div class="textfield">
-          <label for="data">Data:</label>
-          <input type="datetime-local" name="data" id="data" />
-        </div>
+          <label for="campo_data">Data:</label>
+          <input type="date" id="campo_data" name="data_contagem">
+      </div>
 
         <div class="textfield">
           <label for="tipo">Tipo: </label>
@@ -77,47 +73,28 @@
           <label for="quantidade">Quantidade: </label>
           <input
             type="number"
-            name="quantidade"
-            id="quantidade"
-            placeholder="Quantidade a ser adicionada"
+            name="campo_quantidade"
+            id="campo_quantidade"
+            placeholder="Quantidade a ser adicionada ou retirada"
             required
           />
         </div>
-
+        
         <div class="textfield">
-          <label for="mensagem">Sua mensagem</label>
-          <textarea name="mensagem" id="mensagem" cols="30" rows="5"></textarea>
+          <label for="mensagem">Alertas</label>
+          <textarea name="mensagem" id="alertas" cols="30" rows="5">
+            {% for alerta in alertas %}
+            {{ alerta }}
+            {% endfor %}
+          </textarea>
         </div>
 
-        <button class="btn-login">Exportar</button>
+        <button id="btnExportar" class"btn-login">Exportar</button>
       </div>
     </section>
 
-    <script>
-      function buscarProduto() {
-        var termo = document.getElementById('campo_produto').value;
-        var listaSugestoes = document.getElementById('lista_sugestoes');
-
-        while (listaSugestoes.firstChild) {
-          listaSugestoes.removeChild(listaSugestoes.firstChild);
-        }
-
-      <div class="textfield">
-        <label for="quantidade">Quantidade: </label>
-        <input type="number" name="quantidade" id="campo_quantidade" placeholder="Quantidade a ser adicionada" required>
-      </div>
-
-      <div class="textfield">
-        <label for="mensagem">Sua mensagem</label>
-        <textarea name="mensagem" id="mensagem" cols="30" rows="5"></textarea>
-      </div>
-
-      <button class="btn-login">Exportar</button>
-    </div>
-
-  </section>
-
   <script>
+
     function buscarProduto() {
       var termo = document.getElementById('campo_produto').value;
       var listaSugestoes = document.getElementById('lista_sugestoes');
@@ -134,23 +111,31 @@
                   listaSugestoes.classList.add('visible');
                 } else {
                   listaSugestoes.classList.remove('visible');
-                };
-                listaSugestoes.appendChild(div);
-              });
+                }
+                data.forEach((nomeProduto) => {
+                    var div = document.createElement('div');
+                    div.textContent = nomeProduto;
+                    div.onclick = function() {
+                      document.getElementById('campo_produto').value = nomeProduto;
+                      listaSugestoes.classList.remove('visible');
+                    };
+                    listaSugestoes.appendChild(div);
+                });
             })
-            .catch((error) => console.error('Erro:', error));
-        } else {
-          listaSugestoes.classList.remove('visible');
-        }
+            .catch(error => console.error('Erro:', error));
+      } else {
+        listaSugestoes.classList.remove('visible');
       }
     }
     
+    // Clique fora das sugestões para esconder a lista
     document.addEventListener('click', function(e) {
       var listaSugestoes = document.getElementById('lista_sugestoes');
-      if (e.target.id !== 'campo_produto' && !listaSugestoes.contains(e.target)) {
+      if (!listaSugestoes.contains(e.target)) {
         listaSugestoes.classList.remove('visible');
       }
     });
+    
 
 
     function getCookie(name) {
@@ -169,22 +154,23 @@
   }
 
 
-  const csrftoken = getCookie('csrftoken')
+    const csrftoken = getCookie('csrftoken')
 
 
     function adicionarQuantidade() {
       // Obter os valores dos inputs
       var nomeProduto = document.getElementById('campo_produto').value;
       var quantidadeAdicionar = document.getElementById('campo_quantidade').value;
-      
+      var dataContagem = document.getElementById('campo_data').value;
+        
       // Verificar se os campos estão preenchidos
-      if (!nomeProduto || !quantidadeAdicionar) {
+      if (!nomeProduto || !quantidadeAdicionar || !dataContagem) {
         alert('Por favor, preencha todos os campos.');
         return;
       }
-    
-      // Enviar requisição para o servidor
-      fetch('atualizar_quantidade/', {
+      
+        // Enviar requisição para o servidor
+       fetch('atualizar_quantidade/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -192,35 +178,92 @@
           'X-CSRFToken': csrftoken
         },
         body: JSON.stringify({
-          nome: nomeProduto,
-          quantidade: quantidadeAdicionar
+           nome: nomeProduto,
+           quantidade: quantidadeAdicionar,
+           data_contagem: dataContagem
         })
-      })
-      .then(response => response.json())
-      .then(data => {
+       })
+       .then(response => response.json())
+    .then(data => {
         if (data.success) {
-          alert('Quantidade atualizada com sucesso.');
+            alert('Quantidade atualizada com sucesso.');
+            window.location.reload(); // Recarrega a página
         } else {
-          alert('Erro ao atualizar quantidade: ' + data.error);
+            alert('Erro ao atualizar quantidade: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Erro na requisição:', error);
+    });
+}
+
+    function diminuirQuantidade() {
+      // Obter os valores dos inputs
+      var nomeProduto = document.getElementById('campo_produto').value;
+      var quantidadeDiminuir = document.getElementById('campo_quantidade').value;
+        
+      // Verificar se os campos estão preenchidos
+      if (!nomeProduto || !quantidadeDiminuir) {
+        alert('Por favor, preencha todos os campos.');
+        return;
+      }
+      
+        // Enviar requisição para o servidor
+       fetch('diminuir_quantidade/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          // Adicione aqui o token CSRF se for necessário
+          'X-CSRFToken': csrftoken
+        },
+        body: JSON.stringify({
+           nome: nomeProduto,
+           quantidade: quantidadeDiminuir
+        })
+       })
+       .then(response => response.json())
+       .then(data => {
+         if (data.success) {
+          alert('Quantidade atualizada com sucesso.');
+          window.location.reload(); // Recarrega a página
+        } else {
+           alert('Erro ao atualizar quantidade: ' + data.error);
         }
       })
       .catch(error => {
         console.error('Erro na requisição:', error);
-      });
+       });
     }
     
+    document.getElementById('btnExportar').addEventListener('click', function() {
+      fetch('exportar_produtos_xlsx/')
+        .then(response => {
+          if (response.ok) {
+            return response.blob();
+          } else {
+            throw new Error('Ocorreu um erro ao gerar o arquivo de exportação.');
+          }
+        })
+        .then(blob => {
+          // Cria um link temporário para fazer o download do arquivo blob
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.style.display = 'none';
+          a.href = url;
+          // Define o nome do arquivo para download
+          a.download = 'produtos_exportados.xlsx';
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          alert('Exportação concluída!');
+        })
+        .catch(error => {
+          console.error('Erro na exportação:', error);
+          alert(error.message);
+        });
+    });
 
 
-
-      document.addEventListener('click', function (e) {
-        var listaSugestoes = document.getElementById('lista_sugestoes');
-        if (
-          e.target.id !== 'campo_produto' &&
-          !listaSugestoes.contains(e.target)
-        ) {
-          listaSugestoes.classList.remove('visible');
-        }
-      });
     </script>
   </body>
 </html>

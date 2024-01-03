@@ -26,6 +26,8 @@
         <div class="right-login">
             <div class="card-login">
                 <h1>LOGIN</h1>
+
+                <div id="error-message" style="display: none; color: red;"></div>
                 <form class="form-class" id="form-login" method="POST">
                     {% csrf_token %}
                     <div class="textfield">
@@ -49,38 +51,35 @@
     <script>
         document.getElementById('form-login').addEventListener('submit', function (e) {
             e.preventDefault();
-
-            // Criar um objeto FormData baseado no formulário existente
+        
             var formData = new FormData(this);
-            formData.append('username', document.getElementById('usuario').value);
-            formData.append('password', document.getElementById('senha').value);
-
-            // Se você está recebendo o CSRF token do cookie, você pode pegá-lo assim:
             var csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
-            fetch('/login_page/', { // Certifique-se de que esta URL corresponda exatamente ao que você definiu no Django
+        
+            fetch('', {
                 method: 'POST',
                 headers: {
-                    'X-CSRFToken': csrftoken // Incluir o CSRF token
+                    'X-CSRFToken': csrftoken
                 },
                 body: formData,
-                credentials: 'same-origin' // Necessário para incluir cookies CSRF
+                credentials: 'same-origin'
             })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Erro no login');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.message === 'Login bem-sucedido') {
-                        // Redirecionar para a página indicada pela resposta do servidor
-                        window.location.href = data.redirect;
-                    } else {
-                        alert(data.error);
-                    }
-                })
-
+            .then(response => response.json())
+            .then(data => {
+                if (data.redirect) {
+                    // Redirecionar para a página indicada pela resposta do servidor
+                    window.location.href = data.redirect_url;
+                } else if (data.error) {
+                    // Mostrar a mensagem de erro
+                    var errorElement = document.getElementById('error-message');
+                    errorElement.textContent = data.error;
+                    errorElement.style.display = 'block';
+                }
+            })
+            .catch(error => {
+                console.error('Erro na requisição:', error);
+            });
+        });
+        
     </script>
 
 
