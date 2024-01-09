@@ -31,12 +31,12 @@
                 <form class="form-class" id="form-login" method="POST">
                     {% csrf_token %}
                     <div class="textfield">
-                        <label for="usuario">Usuário</label>
+                        <label for="usuario">Usuário: </label>
                         <input type="text" id="username" name="username" placeholder="nome.sobrenome">
                     </div>
 
                     <div class="textfield">
-                        <label for="senha">Senha</label>
+                        <label for="senha">Senha: </label>
                         <input type="password" id="password" name="password" placeholder="Senha">
                     </div>
                     <button type="submit" class="btn-login">Login</button>
