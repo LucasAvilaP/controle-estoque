@@ -1,6 +1,6 @@
 @media only screen and (max-width: 950px) {
   .card-login {
-    width: 85%;
+    width: 80%;
   }
 }
 
@@ -42,8 +42,9 @@
 }
 
 @media only screen and (max-width: 480px) {
+
   .card-login {
-    width: 85%;
+    width: 90%;
   }
 
   .card-login h1{
@@ -51,16 +52,19 @@
     font-size: 1.5rem;
   }
 
+
   .card-login .btn-list {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+    display: flex;
+    flex-wrap: wrap;
+    text-align: center;
+    justify-content: center;
   }
 
   .card-login .btn-list li {
     margin-bottom: 10px;
   }
   .btn-login {
-    width: 50%;
+    width: 80%;
     margin: 0;
     padding: 8px;
     border: none;
