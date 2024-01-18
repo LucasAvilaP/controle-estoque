@@ -53,7 +53,7 @@ def atualizar_quantidade(request):
             produto=produto,
             usuario=request.user,
             quantidade=quantidade_adicionar,
-            tipo='Adição',
+            tipo='Atualização',
             data_hora=timezone.now()  # Ou use a data_contagem se necessário
         )
 
