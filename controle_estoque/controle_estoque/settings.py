@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'produtos',
     'gestao_estoque',
+    'transacoes',
 ]
 
 MIDDLEWARE = [
@@ -77,11 +78,25 @@ WSGI_APPLICATION = 'controle_estoque.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
+BASE_DIR = Path(__file__).resolve().parent.parent
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+        'NAME': BASE_DIR / 'estoqueCentral.sqlite3',
+    },
+    'rioScenarium': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'rioScenarium.sqlite3',
+    },
+    'santoScenarium': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'santoScenarium.sqlite3',
+    },
+    'mangueSeco': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'mangueSeco.sqlite3',
+    },
 }
 
 
