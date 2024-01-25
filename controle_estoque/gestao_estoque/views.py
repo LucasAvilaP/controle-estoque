@@ -22,7 +22,7 @@ import json
 def pagina_inicial(request):
     produtos_abaixo_do_minimo = Produto.objects.filter(quantidade__lt=models.F('nivel_minimo'))
     alertas = [f"O produto {produto.nome} está abaixo do nível mínimo de estoque!" for produto in produtos_abaixo_do_minimo]
-
+    
     return render(request, 'gestao_estoque/pagina-inicial.html', {'alertas': alertas})
 
 

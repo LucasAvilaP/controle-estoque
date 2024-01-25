@@ -83,21 +83,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'estoqueCentral.sqlite3',
-    },
-    'rioScenarium': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'rioScenarium.sqlite3',
-    },
-    'santoScenarium': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'santoScenarium.sqlite3',
-    },
-    'mangueSeco': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'mangueSeco.sqlite3',
-    },
+        'NAME': BASE_DIR / 'bancoCentral.sqlite3',
+    }
 }
+   
 
 
 # Password validation
