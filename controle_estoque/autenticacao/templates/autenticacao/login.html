@@ -30,6 +30,18 @@
                 <div id="error-message" style="display: none; color: red;"></div>
                 <form class="form-class" id="form-login" method="POST">
                     {% csrf_token %}
+
+                    <div class="textfield" style="text-align: right;">
+                        <label for="restaurante">Restaurante:</label>
+                        <select id="restaurante" name="restaurante">
+                            <option value="Rio Scenarium">Rio Scenarium</option>
+                            <option value="Santo Scenarium">Santo Scenarium</option>
+                            <option value="Mangue Seco">Mangue Seco</option>
+                            <option value="Estoque Central">Estoque Central</option>
+                        </select>
+                    </div>
+
+
                     <div class="textfield">
                         <label for="usuario">Usuário: </label>
                         <input type="text" id="username" name="username" placeholder="nome.sobrenome">
@@ -51,10 +63,13 @@
     <script>
         document.getElementById('form-login').addEventListener('submit', function (e) {
             e.preventDefault();
-        
+    
             var formData = new FormData(this);
             var csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-        
+            var restauranteValue = document.getElementById('restaurante').value; // Obtém o valor do restaurante
+    
+            console.log('Restaurante selecionado:', restauranteValue); // Exibe o valor do restaurante no console para depuração
+    
             fetch('', {
                 method: 'POST',
                 headers: {
@@ -79,10 +94,6 @@
                 console.error('Erro na requisição:', error);
             });
         });
-        
+    
     </script>
-
-
-</body>
-
-</html>
+    

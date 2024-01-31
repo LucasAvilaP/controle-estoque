@@ -4,17 +4,29 @@ from rest_framework.decorators import api_view
 from django.shortcuts import render, redirect
 from django.views.decorators.http import require_http_methods
 import json
+from gestao_estoque.models import Restaurante
 
 @api_view(['POST'])
 def login_view(request):
     username = request.data.get('username')
     password = request.data.get('password')
+    restaurante_nome = request.data.get('restaurante')
+    
     user = authenticate(username=username, password=password)
     if user is not None:
-        # Aqui você pode usar o login do Django para iniciar a sessão,
-        # ou retornar um token JWT, dependendo da sua abordagem de autenticação
-        return JsonResponse({'message': 'Login bem-sucedido'}, status=200)
-    return JsonResponse({'error': 'Login inválido'}, status=400)
+        login(request, user)
+
+        # Encontrar o restaurante com base no nome
+        try:
+            restaurante = Restaurante.objects.get(nome=restaurante_nome)
+            request.session['restaurante_id'] = restaurante.id
+        except Restaurante.DoesNotExist:
+            return JsonResponse({'error': 'Restaurante inválido'}, status=400)
+        
+        return JsonResponse({'message': 'Login bem-sucedido', 'redirect_url': '/pagina_inicial/'}, status=200)
+    else:
+        return JsonResponse({'error': 'Login inválido'}, status=400)
+
     
 
 @api_view(['POST'])
@@ -27,14 +39,17 @@ def login_page(request):
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
-        
+        restaurante_nome = request.POST.get('restaurante')
+
         user = authenticate(request, username=username, password=password)
-        if user is not None:
-            if user.is_active:
-                login(request, user)
+        if user is not None and user.is_active:
+            login(request, user)
+            try:
+                restaurante = Restaurante.objects.get(nome=restaurante_nome)
+                request.session['restaurante_id'] = restaurante.id
                 return JsonResponse({'redirect': True, 'redirect_url': '/pagina_inicial/'})
-            else:
-                return JsonResponse({'error': 'Sua conta está inativa.'}, status=400)
+            except Restaurante.DoesNotExist:
+                return JsonResponse({'error': 'Restaurante selecionado não existe.'}, status=400)
         else:
             return JsonResponse({'error': 'Usuário ou senha inválidos.'}, status=400)
     else:

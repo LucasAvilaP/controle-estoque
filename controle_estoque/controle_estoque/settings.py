@@ -82,8 +82,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'bancoCentral.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'bancocentral',
+        'USER': 'lucas.avila',
+        'PASSWORD': 'Inicial123!',
+        'HOST': 'localhost',
+        'PORT': '3306',
     }
 }
    
@@ -111,7 +115,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'pt-br'
 
 TIME_ZONE = 'UTC'
 
