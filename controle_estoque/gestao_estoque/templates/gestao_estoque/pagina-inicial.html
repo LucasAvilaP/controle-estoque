@@ -37,8 +37,8 @@
           <ul class="btn-list">
             <li onclick="adicionarQuantidade()">Atualizar</li>
             <li onclick="diminuirQuantidade()">Registrar Perda</li>
-            <li onclick="diminuirQuantidade()">Empréstimo</li>
-            <li onclick="diminuirQuantidade()">Devolução</li>
+            <li onclick="realizarEmprestimo()">Empréstimo</li>
+            <li onclick="realizarDevolucao()">Devolução</li>
             <li onclick="diminuirQuantidade()">Administrar</li>
  
           </ul>
@@ -273,6 +273,73 @@
               alert(error.message);
             });
         });
+
+        function realizarEmprestimo() {
+          var nomeProduto = document.getElementById('campo_produto').value;
+          var quantidade = document.getElementById('campo_quantidade').value;
+          // Outros campos necessários para a operação de empréstimo
+      
+          if (!nomeProduto || !quantidade) {
+              alert('Por favor, preencha todos os campos necessários.');
+              return;
+          }
+      
+          // Substitua 'emprestimo/' pelo endpoint correto do seu backend
+          fetch('realizar_emprestimo/', {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+                  'X-CSRFToken': csrftoken,
+              },
+              body: JSON.stringify({
+                  nome: nomeProduto,
+                  quantidade: quantidade,
+                  // Outros dados necessários
+              }),
+          })
+          .then(response => response.json())
+          .then(data => {
+              // Trate a resposta do servidor aqui
+              alert('Empréstimo realizado com sucesso.');
+          })
+          .catch(error => {
+              console.error('Erro na requisição:', error);
+          });
+      }
+      
+      function realizarDevolucao() {
+          var nomeProduto = document.getElementById('campo_produto').value;
+          var quantidade = document.getElementById('campo_quantidade').value;
+          // Outros campos necessários para a operação de devolução
+      
+          if (!nomeProduto || !quantidade) {
+              alert('Por favor, preencha todos os campos necessários.');
+              return;
+          }
+      
+          // Substitua 'devolucao/' pelo endpoint correto do seu backend
+          fetch('realizar_devolucao/', {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+                  'X-CSRFToken': csrftoken,
+              },
+              body: JSON.stringify({
+                  nome: nomeProduto,
+                  quantidade: quantidade,
+                  // Outros dados necessários
+              }),
+          })
+          .then(response => response.json())
+          .then(data => {
+              // Trate a resposta do servidor aqui
+              alert('Devolução realizada com sucesso.');
+          })
+          .catch(error => {
+              console.error('Erro na requisição:', error);
+          });
+      }
+      
     </script>
   </body>
 </html>

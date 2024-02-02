@@ -4,6 +4,8 @@ import csv
 import xlsxwriter
 from datetime import date
 from django.shortcuts import render
+from django.db import transaction
+from django.db.models import F
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods, require_POST
 from django.http import JsonResponse, HttpResponse
@@ -11,6 +13,8 @@ from produtos.models import Produto, HistoricoContagem, EstoqueProduto
 from django.views.decorators.csrf import csrf_exempt
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.shortcuts import get_object_or_404
+from gestao_estoque.models import Local, Transacao
 from .models import HistoricoLog
 from django.utils import timezone
 from django.db import models
@@ -107,8 +111,119 @@ def diminuir_quantidade(request):
         return JsonResponse({'success': False, 'error': 'Produto não encontrado ou não disponível no restaurante.'}, status=404)
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
+    except ValueError as e:
+        return JsonResponse({'success': False, 'error': 'Valor inválido para quantidade.'}, status=400)
 
     return JsonResponse({'success': False, 'error': 'Método não permitido.'}, status=405)
+
+
+
+
+@require_POST
+@login_required
+def realizar_emprestimo(request):
+    data = json.loads(request.body)
+    nome_produto = data.get('nome')
+    quantidade = int(data.get('quantidade'))
+    restaurante_id = request.session.get('restaurante_id')
+    usuario = request.user
+
+    estoque_central = get_object_or_404(Local, nome='Estoque Central')
+    estoque_central_id = estoque_central.id
+
+    with transaction.atomic():
+        try:
+            # Diminui a quantidade no estoque central
+            estoque_central_produto = EstoqueProduto.objects.select_for_update().get(
+                produto__nome__iexact=nome_produto, local_id=estoque_central_id
+            )
+
+            if estoque_central_produto.quantidade < quantidade:
+                return JsonResponse({'success': False, 'error': 'Estoque central não possui quantidade suficiente.'})
+            
+            estoque_central_produto.quantidade -= quantidade
+            estoque_central_produto.save()
+
+            # Aumenta a quantidade no estoque do restaurante
+            estoque_restaurante_produto = EstoqueProduto.objects.select_for_update().get(
+                produto__nome__iexact=nome_produto, local__restaurante__id=restaurante_id
+            )
+            estoque_restaurante_produto.quantidade += quantidade
+            estoque_restaurante_produto.save()
+
+            # Registra a transação de empréstimo no modelo Transacao
+            Transacao.objects.create(
+                produto=estoque_central_produto.produto,
+                usuario=usuario,
+                quantidade=quantidade,
+                tipo='EM',
+                origem=estoque_central,
+                destino=estoque_restaurante_produto.local,
+                restaurante=estoque_restaurante_produto.local.restaurante
+            )
+
+            return JsonResponse({'success': True, 'message': 'Empréstimo realizado com sucesso.'})
+
+        except EstoqueProduto.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Produto não encontrado ou não disponível.'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': 'Erro ao processar o empréstimo.'})
+
+
+
+
+
+@require_POST
+@login_required
+def realizar_devolucao(request):
+    data = json.loads(request.body)
+    nome_produto = data.get('nome')
+    quantidade = int(data.get('quantidade'))
+    restaurante_id = request.session.get('restaurante_id')
+    usuario = request.user
+
+    estoque_central = get_object_or_404(Local, nome='Estoque Central')
+    estoque_central_id = estoque_central.id
+
+    with transaction.atomic():
+        try:
+            # Aumenta a quantidade no estoque central
+            estoque_central_produto = EstoqueProduto.objects.select_for_update().get(
+                produto__nome__iexact=nome_produto, local_id=estoque_central_id
+            )
+            estoque_central_produto.quantidade += quantidade
+            estoque_central_produto.save()
+
+            # Diminui a quantidade no estoque do restaurante
+            estoque_restaurante_produto = EstoqueProduto.objects.select_for_update().get(
+                produto__nome__iexact=nome_produto, local__restaurante__id=restaurante_id
+            )
+
+            if estoque_restaurante_produto.quantidade < quantidade:
+                return JsonResponse({'success': False, 'error': 'Quantidade insuficiente no estoque do restaurante.'})
+            
+            estoque_restaurante_produto.quantidade -= quantidade
+            estoque_restaurante_produto.save()
+
+            # Registra a transação de devolução no modelo Transacao
+            Transacao.objects.create(
+                produto=estoque_central_produto.produto,
+                usuario=usuario,
+                quantidade=quantidade,
+                tipo='DE',
+                origem=estoque_restaurante_produto.local,
+                destino=estoque_central,
+                restaurante=estoque_restaurante_produto.local.restaurante
+            )
+
+            return JsonResponse({'success': True, 'message': 'Devolução realizada com sucesso.'})
+
+        except EstoqueProduto.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Produto não encontrado ou não disponível.'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': 'Erro ao processar a devolução.'})
+
+
 
 
     

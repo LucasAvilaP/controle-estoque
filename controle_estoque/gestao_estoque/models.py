@@ -47,3 +47,23 @@ class HistoricoLog(models.Model):
 
     def __str__(self):
         return f"{self.produto.nome} - {self.tipo} - {self.quantidade}"
+    
+
+
+class Transacao(models.Model):
+    TIPO_ACOES = (
+        ('EM', 'Empréstimo'),
+        ('DE', 'Devolução'),
+    )
+
+    produto = models.ForeignKey('produtos.Produto', on_delete=models.CASCADE)
+    usuario = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    quantidade = models.IntegerField()
+    tipo = models.CharField(max_length=2, choices=TIPO_ACOES)
+    data_hora = models.DateTimeField(auto_now_add=True)
+    origem = models.ForeignKey(Local, related_name='transacao_origem', on_delete=models.SET_NULL, null=True, blank=True)
+    destino = models.ForeignKey(Local, related_name='transacao_destino', on_delete=models.SET_NULL, null=True, blank=True)
+    restaurante = models.ForeignKey(Restaurante, on_delete=models.SET_NULL, null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.produto.nome} - {self.tipo} - {self.quantidade} - {self.usuario.username if self.usuario else 'N/A'}"
