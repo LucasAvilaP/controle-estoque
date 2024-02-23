@@ -4,13 +4,15 @@ from gestao_estoque.models import Local
 
 class Produto(models.Model):
     nome = models.CharField(max_length=100)
+    apelido = models.CharField(max_length=100, blank=True, null=True)  # Campo para o apelido do produto
     data_entrada = models.DateField()
     tipo = models.CharField(max_length=100)
-    unidade = models.CharField(max_length=20, blank=True, null=True)  # Unidade de medida
+    unidade = models.CharField(max_length=20, blank=True, null=True)
     nivel_minimo = models.IntegerField(default=15)
 
     def __str__(self):
-        return self.nome
+        return self.nome  # ou return f"{self.nome} ({self.apelido})" para mostrar ambos
+
 
 class EstoqueProduto(models.Model):
     produto = models.ForeignKey(Produto, on_delete=models.CASCADE, related_name='estoque')
@@ -19,6 +21,8 @@ class EstoqueProduto(models.Model):
 
     def __str__(self):
         return f"{self.local.nome} - {self.produto.nome} - {self.quantidade}"
+    
+
 
 class HistoricoContagem(models.Model):
     produto = models.ForeignKey(Produto, on_delete=models.CASCADE, related_name='historico_contagem')

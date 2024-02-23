@@ -39,7 +39,8 @@
             <li onclick="diminuirQuantidade()">Registrar Perda</li>
             <li onclick="realizarEmprestimo()">Empréstimo</li>
             <li onclick="realizarDevolucao()">Devolução</li>
-            <li onclick="diminuirQuantidade()">Administrar</li>
+            <li onclick="administracao()">Administrar</li>
+            <li onclick="sair()">Sair</li>
  
           </ul>
         </nav>
@@ -300,7 +301,7 @@
           .then(response => response.json())
           .then(data => {
               // Trate a resposta do servidor aqui
-              alert('Empréstimo realizado com sucesso.');
+              alert('Solicitação de empréstimo criada com sucesso. Aguardando aprovação.');
           })
           .catch(error => {
               console.error('Erro na requisição:', error);
@@ -339,6 +340,31 @@
               console.error('Erro na requisição:', error);
           });
       }
+
+      document.addEventListener('DOMContentLoaded', function() {
+        const btns = document.querySelectorAll('.btn-list li');
+        btns.forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                if (this.textContent === 'Administrar') {
+                    window.location.href = '/admin/';
+                }
+                
+            });
+        });
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+      const btns = document.querySelectorAll('.btn-list li');
+      btns.forEach(function(btn) {
+          btn.addEventListener('click', function() {
+              if (this.textContent === 'Sair') {
+                  window.location.href = '/';
+              }
+              
+          });
+      });
+  });
+    
       
     </script>
   </body>
