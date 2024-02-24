@@ -278,16 +278,39 @@ def exportar_produtos_xlsx(request):
     workbook = xlsxwriter.Workbook(output)
     worksheet = workbook.add_worksheet()
 
-    # Cabeçalhos
-    worksheet.write('A1', 'Nome do Produto')
-    worksheet.write('B1', 'Apelido')
-    worksheet.write('C1', 'Quantidade Atual')
-    worksheet.write('D1', 'Última Contagem')
-    worksheet.write('E1', 'Diferença')
+    # Formatos
+    header_format = workbook.add_format({
+        'bold': True,
+        'text_wrap': True,
+        'valign': 'top',
+        'fg_color': '#D7E4BC',
+        'border': 1
+    })
 
-    # Busca os produtos no estoque do restaurante
+    cell_format = workbook.add_format({
+        'border': 1,
+        'valign': 'top',
+        'num_format': '0'
+    })
+
+    # Ajustar larguras das colunas
+    worksheet.set_column('A:A', 20)
+    worksheet.set_column('B:E', 15)
+
+    # Cabeçalhos com formato
+    worksheet.write('A1', 'Nome do Produto', header_format)
+    worksheet.write('B1', 'Apelido', header_format)
+    worksheet.write('C1', 'Quantidade Atual', header_format)
+    worksheet.write('D1', 'Última Contagem', header_format)
+    worksheet.write('E1', 'Diferença', header_format)
+
+    # Congelar painéis
+    worksheet.freeze_panes(1, 0)
+
+    # Busca os produtos
     produtos_estoque = EstoqueProduto.objects.filter(local__restaurante_id=restaurante_id).order_by('produto__nome')
 
+    # Iterar sobre os produtos
     for idx, estoque in enumerate(produtos_estoque, start=2):
         ultima_contagem = HistoricoContagem.objects.filter(
             produto=estoque.produto,
@@ -298,12 +321,42 @@ def exportar_produtos_xlsx(request):
         quantidade_ultima_contagem = ultima_contagem.quantidade_contagem if ultima_contagem else 0
         diferenca = estoque.quantidade - quantidade_ultima_contagem
 
-        worksheet.write(idx, 0, estoque.produto.nome)
-        worksheet.write(idx, 1, estoque.produto.apelido)
-        worksheet.write(idx, 2, estoque.quantidade)
-        worksheet.write(idx, 3, quantidade_ultima_contagem)
-        worksheet.write(idx, 4, diferenca)
+        worksheet.write(idx, 0, estoque.produto.nome, cell_format)
+        worksheet.write(idx, 1, estoque.produto.apelido, cell_format)
+        worksheet.write(idx, 2, estoque.quantidade, cell_format)
+        worksheet.write(idx, 3, quantidade_ultima_contagem, cell_format)
+        worksheet.write(idx, 4, diferenca, cell_format)
 
+    # Final do loop
+    end_row = idx
+
+    end_row += 1
+
+    # Crie um gráfico de colunas
+    chart = workbook.add_chart({'type': 'column'})
+
+    # Configure a série do gráfico
+    chart.add_series({
+        'name': 'Diferença',
+        'categories': f'=Sheet1!$A$2:$A${end_row}',
+        'values': f'=Sheet1!$E$2:$E${end_row}',
+    })
+
+    chart.set_x_axis({
+    'name': 'Produtos',
+    'label_position': 'low',
+    'num_font': {'rotation': 45},
+})
+
+    # Adicione um título ao gráfico e defina o nome dos eixos
+    chart.set_title({'name': 'Diferença de Contagem dos Produtos'})
+    chart.set_y_axis({'name': 'Diferença na Quantidade'})
+
+    # Insira o gráfico na planilha ajustando a posição baseada no número de produtos
+    chart_position = f'H{end_row + 2}'  # Ajuste para inserir o gráfico abaixo dos dados
+    worksheet.insert_chart(chart_position, chart)
+
+    # Fechar o workbook
     workbook.close()
     output.seek(0)
 

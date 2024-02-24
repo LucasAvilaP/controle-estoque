@@ -103,3 +103,6 @@ class TransacaoAdmin(admin.ModelAdmin):
             )
 
         self.message_user(request, f"{queryset.count()} transação(ões) rejeitada(s) com sucesso.", messages.SUCCESS)
+
+
+

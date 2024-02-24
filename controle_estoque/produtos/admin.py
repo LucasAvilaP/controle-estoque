@@ -5,10 +5,12 @@ from django.http import HttpResponse
 from django.contrib.auth.models import User
 import xlsxwriter
 
+
+
 @admin.register(Produto)
 class ProdutoAdmin(admin.ModelAdmin):
     list_display = ('nome', 'apelido', 'tipo', 'nivel_minimo')
-    list_filter = ('tipo')
+    list_filter = ('tipo',)
     search_fields = ('nome', 'apelido',)
 
 
