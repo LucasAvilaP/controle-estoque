@@ -1,4 +1,4 @@
-#!C:\Users\lucas.avila\Desktop\controle-estoque\venv\Scripts\python.exe
+#!C:\Users\lucas.avila\Desktop\estoque_novo\controle-estoque\venv\Scripts\python.exe
 
 ##############################################################################
 #

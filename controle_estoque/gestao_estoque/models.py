@@ -28,7 +28,6 @@ class HistoricoLog(models.Model):
         ('EM', 'Empréstimo'),
         ('DE', 'Devolução'),
         ('AT', 'Atualização'),
-        # registrar perda aqui *
     )
 
     STATUS_ITEM = (

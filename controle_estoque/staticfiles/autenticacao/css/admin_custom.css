@@ -1,0 +1,5 @@
+#header #site-name {
+    padding-left: 40px; /* Ajuste conforme necessário */
+    background: url('/static/images/logo.jpg') no-repeat left center;
+    background-size: 30px 30px; /* Ajuste o tamanho da sua logo */
+}

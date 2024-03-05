@@ -32,16 +32,28 @@
     <section class="main-login">
       <div class="card-login">
         <h1>Gerenciamento de utensílios</h1>
+        <div id="nome-restaurante">
+          {% if restaurante_nome %}
+              <p style="color: #00ff88;">{{ restaurante_nome }}</p>
+          {% else %}
+              <p style="color: #00ff88;">Nenhum restaurante selecionado.</p>
+          {% endif %}
+        </div>
 
         <nav class="btn-geral">
           <ul class="btn-list">
             <li onclick="adicionarQuantidade()">Atualizar</li>
             <li onclick="diminuirQuantidade()">Registrar Perda</li>
+            <li onclick="realizarEmprestimo()">Empréstimo</li>
+            <li onclick="realizarDevolucao()">Devolução</li>
+            <li onclick="administracao()">Administrar</li>
+            <li onclick="sair()">Sair</li>
+ 
           </ul>
         </nav>
 
         <div class="textfield">
-          <label for="produto">Produto:</label>
+          <label for="campo_produto">Produto:</label>
           <input
             type="text"
             id="campo_produto"
@@ -70,7 +82,7 @@
         </div>
 
         <div class="textfield">
-          <label for="quantidade">Quantidade: </label>
+          <label for="campo_quantidade">Quantidade: </label>
           <input
             type="number"
             name="campo_quantidade"
@@ -81,13 +93,10 @@
         </div>
 
         <div class="textfield">
-          <label for="mensagem">Alertas</label>
-          <textarea name="mensagem" id="alertas" cols="30" rows="5">
-            {% for alerta in alertas %}
-            {{ alerta }}
-            {% endfor %}
-          </textarea>
+          <label for="campo_motivo">Motivo:</label>
+          <textarea id="campo_motivo" name="campo_motivo" cols="30" rows="5" placeholder="Descreva o motivo da perda" required></textarea>
         </div>
+      
 
         <button id="btnExportar" class="btn-login">Exportar</button>
       </div>
@@ -202,32 +211,33 @@
       function diminuirQuantidade() {
         // Obter os valores dos inputs
         var nomeProduto = document.getElementById('campo_produto').value;
-        var quantidadeDiminuir =
-          document.getElementById('campo_quantidade').value;
-
+        var quantidadeDiminuir = document.getElementById('campo_quantidade').value;
+        var motivo = document.getElementById('campo_motivo').value; // Captura o valor do motivo
+      
         // Verificar se os campos estão preenchidos
         if (!nomeProduto || !quantidadeDiminuir) {
           alert('Por favor, preencha todos os campos.');
           return;
         }
-
+        console.log(quantidadeDiminuir)
+      
         // Enviar requisição para o servidor
         fetch('diminuir_quantidade/', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            // Adicione aqui o token CSRF se for necessário
             'X-CSRFToken': csrftoken,
           },
           body: JSON.stringify({
             nome: nomeProduto,
             quantidade: quantidadeDiminuir,
+            motivo: motivo, // Inclui o motivo na requisição
           }),
         })
           .then((response) => response.json())
           .then((data) => {
             if (data.success) {
-              alert('Quantidade atualizada com sucesso.');
+              alert('Quantidade diminuída com sucesso e motivo registrado.');
               window.location.reload(); // Recarrega a página
             } else {
               alert('Erro ao atualizar quantidade: ' + data.error);
@@ -236,7 +246,9 @@
           .catch((error) => {
             console.error('Erro na requisição:', error);
           });
+          
       }
+      
 
       document
         .getElementById('btnExportar')
@@ -269,6 +281,98 @@
               alert(error.message);
             });
         });
+
+        function realizarEmprestimo() {
+          var nomeProduto = document.getElementById('campo_produto').value;
+          var quantidade = document.getElementById('campo_quantidade').value;
+          // Outros campos necessários para a operação de empréstimo
+      
+          if (!nomeProduto || !quantidade) {
+              alert('Por favor, preencha todos os campos necessários.');
+              return;
+          }
+      
+          // Substitua 'emprestimo/' pelo endpoint correto do seu backend
+          fetch('realizar_emprestimo/', {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+                  'X-CSRFToken': csrftoken,
+              },
+              body: JSON.stringify({
+                  nome: nomeProduto,
+                  quantidade: quantidade,
+                  // Outros dados necessários
+              }),
+          })
+          .then(response => response.json())
+          .then(data => {
+              // Trate a resposta do servidor aqui
+              alert('Solicitação de empréstimo criada com sucesso. Aguardando aprovação.');
+          })
+          .catch(error => {
+              console.error('Erro na requisição:', error);
+          });
+      }
+      
+      function realizarDevolucao() {
+          var nomeProduto = document.getElementById('campo_produto').value;
+          var quantidade = document.getElementById('campo_quantidade').value;
+          // Outros campos necessários para a operação de devolução
+      
+          if (!nomeProduto || !quantidade) {
+              alert('Por favor, preencha todos os campos necessários.');
+              return;
+          }
+      
+          // Substitua 'devolucao/' pelo endpoint correto do seu backend
+          fetch('realizar_devolucao/', {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+                  'X-CSRFToken': csrftoken,
+              },
+              body: JSON.stringify({
+                  nome: nomeProduto,
+                  quantidade: quantidade,
+                  // Outros dados necessários
+              }),
+          })
+          .then(response => response.json())
+          .then(data => {
+              // Trate a resposta do servidor aqui
+              alert('Devolução realizada com sucesso.');
+          })
+          .catch(error => {
+              console.error('Erro na requisição:', error);
+          });
+      }
+
+      document.addEventListener('DOMContentLoaded', function() {
+        const btns = document.querySelectorAll('.btn-list li');
+        btns.forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                if (this.textContent === 'Administrar') {
+                    window.location.href = '/admin/';
+                }
+                
+            });
+        });
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+      const btns = document.querySelectorAll('.btn-list li');
+      btns.forEach(function(btn) {
+          btn.addEventListener('click', function() {
+              if (this.textContent === 'Sair') {
+                  window.location.href = '/';
+              }
+              
+          });
+      });
+  });
+    
+      
     </script>
   </body>
 </html>
