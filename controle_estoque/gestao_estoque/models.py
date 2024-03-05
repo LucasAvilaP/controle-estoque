@@ -46,6 +46,7 @@ class HistoricoLog(models.Model):
     status = models.CharField(max_length=2, choices=STATUS_ITEM, default='DI')
     origem = models.ForeignKey(Local, related_name='log_origem', on_delete=models.SET_NULL, null=True, blank=True)
     destino = models.ForeignKey(Local, related_name='log_destino', on_delete=models.SET_NULL, null=True, blank=True)
+    motivo = models.TextField(null=True, blank=True)
     data_hora = models.DateTimeField(auto_now_add=True)
     data_devolucao = models.DateTimeField(null=True, blank=True)  # Data esperada para devolução
 

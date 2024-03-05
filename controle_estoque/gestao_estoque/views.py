@@ -14,7 +14,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.shortcuts import get_object_or_404, redirect
-from gestao_estoque.models import Local, Transacoe
+from gestao_estoque.models import Local, Transacoe, Restaurante
 from .models import HistoricoLog
 from django.utils import timezone
 from django.contrib import messages
@@ -30,8 +30,11 @@ from . import views
 @login_required
 def pagina_inicial(request):
     restaurante_id = request.session.get('restaurante_id')
+    restaurante_nome = None  # Inicialize com None para o caso de não ter um restaurante selecionado
 
     if restaurante_id:
+        restaurante = Restaurante.objects.get(id=restaurante_id)
+        restaurante_nome = restaurante.nome
         produtos_abaixo_do_minimo = EstoqueProduto.objects.filter(
             local_id=restaurante_id,
             quantidade__lt=models.F('produto__nivel_minimo')
@@ -40,7 +43,12 @@ def pagina_inicial(request):
     else:
         alertas = ['Nenhum restaurante selecionado.']
 
-    return render(request, 'gestao_estoque/pagina-inicial.html', {'alertas': alertas})
+    # Passe o nome do restaurante no contexto para a template
+    context = {
+        'alertas': alertas,
+        'restaurante_nome': restaurante_nome,  # Adicionado aqui
+    }
+    return render(request, 'gestao_estoque/pagina-inicial.html', context)
 
 
 def buscar_produtos(request):
@@ -113,24 +121,29 @@ def atualizar_quantidade(request):
 
    
 
-require_POST
+@require_http_methods(["POST"])
 def diminuir_quantidade(request):
-    data = json.loads(request.body)
-    nome_produto = data.get('nome')
-    quantidade_diminuir = int(data.get('quantidade'))
-    restaurante_id = request.session.get('restaurante_id')
-
-    if not restaurante_id:
-        return JsonResponse({'success': False, 'error': 'Restaurante não selecionado.'}, status=400)
-
     try:
+        data = json.loads(request.body)
+        nome_produto = data.get('nome')
+        quantidade_diminuir_str = data.get('quantidade')
+        motivo = data.get('motivo', '')
+        restaurante_id = request.session.get('restaurante_id')
+
+        if not nome_produto or quantidade_diminuir_str is None:
+            raise ValueError("Nome do produto e quantidade são obrigatórios.")
+
+        quantidade_diminuir = int(quantidade_diminuir_str)
+
+        if not restaurante_id:
+            return JsonResponse({'success': False, 'error': 'Restaurante não selecionado.'}, status=400)
+
         with transaction.atomic():
-            # Verifica se o produto existe pelo nome ou apelido, e está associado ao restaurante através do estoque/local
             produto = Produto.objects.filter(Q(nome__iexact=nome_produto) | Q(apelido__iexact=nome_produto)).first()
             if not produto:
-                return JsonResponse({'success': False, 'error': 'Produto não encontrado pelo nome ou apelido.'}, status=404)
+                return JsonResponse({'success': False, 'error': 'Produto não encontrado.'}, status=404)
 
-            local = Local.objects.filter(restaurante__id=restaurante_id).first()
+            local = Local.objects.filter(restaurante_id=restaurante_id).first()
             if not local:
                 return JsonResponse({'success': False, 'error': 'Local não encontrado.'}, status=404)
 
@@ -138,32 +151,29 @@ def diminuir_quantidade(request):
             if estoque.quantidade < quantidade_diminuir:
                 return JsonResponse({'success': False, 'error': 'Quantidade insuficiente no estoque.'}, status=400)
 
-            estoque.quantidade = F('quantidade') - quantidade_diminuir
+            # Atualiza o estoque
+            estoque.quantidade -= quantidade_diminuir
             estoque.save()
 
+            # Registra a alteração no histórico
             HistoricoLog.objects.create(
                 produto=produto,
                 usuario=request.user,
                 quantidade=-quantidade_diminuir,  # Negativo para indicar redução
+                motivo=motivo,  # Registra o motivo da perda
                 origem=local,
                 tipo='RE',
                 local=local
             )
 
-            HistoricoContagem.objects.update_or_create(
-                produto=produto,
-                local=local,
-                data_contagem=timezone.now().date(),
-                defaults={'quantidade_contagem': F('quantidade_contagem') - quantidade_diminuir}
-            )
+            return JsonResponse({'success': True, 'message': 'Quantidade diminuída e motivo registrado com sucesso.'})
 
-        return JsonResponse({'success': True, 'message': 'Quantidade diminuída com sucesso.'})
     except EstoqueProduto.DoesNotExist:
         return JsonResponse({'success': False, 'error': 'Produto não disponível no estoque do restaurante especificado.'}, status=404)
-    except ValueError:
-        return JsonResponse({'success': False, 'error': 'Quantidade inválida.'}, status=400)
+    except ValueError as e:
+        return JsonResponse({'success': False, 'error': f'Erro na entrada de dados: {str(e)}'}, status=400)
     except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+        return JsonResponse({'success': False, 'error': f'Erro interno do servidor: {str(e)}'}, status=500)
 
 
 

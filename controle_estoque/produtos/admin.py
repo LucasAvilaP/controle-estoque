@@ -85,7 +85,7 @@ class EstoqueProdutoAdmin(admin.ModelAdmin):
             if existing:
                 existing.quantidade += obj.quantidade
                 existing.save()
-                action_type = 'AT'  # Se o produto já existe, considera como atualização
+                action_type = 'AD'  # Se o produto já existe, considera como atualização
             else:
                 obj.save()
                 action_type = 'AD'  # Se é um novo produto, considera como adição
