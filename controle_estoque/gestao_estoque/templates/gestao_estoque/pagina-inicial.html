@@ -25,7 +25,7 @@
       href="{% static 'autenticacao/css/media.css' %}"
       type="text/css"/>
 
-    <title>Santo Scenarium</title>
+    <title>Gerenciamento</title>
   </head>
 
   <body>
@@ -76,7 +76,7 @@
             type="text"
             name="tipo"
             id="tipo"
-            placeholder="Ex: copo, garfo"
+            placeholder="Ex: copo, talher..."
             required
           />
         </div>
@@ -285,6 +285,7 @@
         function realizarEmprestimo() {
           var nomeProduto = document.getElementById('campo_produto').value;
           var quantidade = document.getElementById('campo_quantidade').value;
+          var motivo = document.getElementById('campo_motivo').value;
           // Outros campos necessários para a operação de empréstimo
       
           if (!nomeProduto || !quantidade) {
@@ -302,6 +303,7 @@
               body: JSON.stringify({
                   nome: nomeProduto,
                   quantidade: quantidade,
+                  motivo: motivo,
                   // Outros dados necessários
               }),
           })
@@ -318,6 +320,7 @@
       function realizarDevolucao() {
           var nomeProduto = document.getElementById('campo_produto').value;
           var quantidade = document.getElementById('campo_quantidade').value;
+          var motivo = document.getElementById('campo_motivo').value;
           // Outros campos necessários para a operação de devolução
       
           if (!nomeProduto || !quantidade) {
@@ -335,6 +338,7 @@
               body: JSON.stringify({
                   nome: nomeProduto,
                   quantidade: quantidade,
+                  motivo: motivo,
                   // Outros dados necessários
               }),
           })

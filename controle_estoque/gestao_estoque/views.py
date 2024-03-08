@@ -183,6 +183,7 @@ def realizar_emprestimo(request):
     data = json.loads(request.body)
     nome_produto = data.get('nome')
     quantidade = int(data.get('quantidade'))
+    motivo = data.get('motivo', '')
     restaurante_id = request.session.get('restaurante_id')
     usuario = request.user
 
@@ -195,11 +196,9 @@ def realizar_emprestimo(request):
                 Q(produto__nome__iexact=nome_produto) | Q(produto__apelido__iexact=nome_produto), 
                 local=estoque_central)
 
-            # Verifica se o estoque central possui quantidade suficiente
             if produto_estoque_central.quantidade < quantidade:
                 return JsonResponse({'success': False, 'error': 'Estoque central não possui quantidade suficiente.'})
             
-            # Cria a transação como pendente sem ajustar o estoque imediatamente
             Transacoe.objects.create(
                 produto=produto_estoque_central.produto,
                 usuario=usuario,
@@ -207,13 +206,12 @@ def realizar_emprestimo(request):
                 tipo='EM',  # Empréstimo
                 origem=estoque_central,
                 destino=local_destino,
-                estado_solicitacao='PE'  # Pendente
+                estado_solicitacao='PE',  # Pendente
+                motivo=motivo  # Adiciona o motivo na transação
             )
 
             return JsonResponse({'success': True, 'message': 'Solicitação de empréstimo criada com sucesso. Aguardando aprovação.'})
 
-        except EstoqueProduto.DoesNotExist:
-            return JsonResponse({'success': False, 'error': 'Produto não encontrado ou não disponível no estoque central.'})
         except Exception as e:
             return JsonResponse({'success': False, 'error': f'Erro ao processar a solicitação de empréstimo: {str(e)}'})
 
@@ -227,6 +225,7 @@ def realizar_devolucao(request):
     data = json.loads(request.body)
     nome_produto = data.get('nome')
     quantidade = int(data.get('quantidade'))
+    motivo = data.get('motivo', '')
     restaurante_id = request.session.get('restaurante_id')
     usuario = request.user
 
@@ -235,7 +234,6 @@ def realizar_devolucao(request):
 
     with transaction.atomic():
         try:
-            # Aumenta a quantidade no estoque central
             estoque_central_produto = EstoqueProduto.objects.select_for_update().get(
                 Q(produto__nome__iexact=nome_produto) | Q(produto__apelido__iexact=nome_produto), 
                 local_id=estoque_central_id
@@ -243,35 +241,28 @@ def realizar_devolucao(request):
             estoque_central_produto.quantidade += quantidade
             estoque_central_produto.save()
 
-            # Diminui a quantidade no estoque do restaurante
             estoque_restaurante_produto = EstoqueProduto.objects.select_for_update().get(
                 Q(produto__nome__iexact=nome_produto) | Q(produto__apelido__iexact=nome_produto), 
                 local__restaurante__id=restaurante_id
             )
-
-            if estoque_restaurante_produto.quantidade < quantidade:
-                return JsonResponse({'success': False, 'error': 'Quantidade insuficiente no estoque do restaurante.'})
-            
             estoque_restaurante_produto.quantidade -= quantidade
             estoque_restaurante_produto.save()
 
-            # Registra a transação de devolução no modelo Transacao
             Transacoe.objects.create(
                 produto=estoque_central_produto.produto,
                 usuario=usuario,
                 quantidade=quantidade,
-                tipo='DE',
+                tipo='DE',  # Devolução
                 origem=estoque_restaurante_produto.local,
                 destino=estoque_central,
-                restaurante=estoque_restaurante_produto.local.restaurante
+                restaurante=estoque_restaurante_produto.local.restaurante,
+                motivo=motivo  # Adiciona o motivo na transação
             )
 
             return JsonResponse({'success': True, 'message': 'Devolução realizada com sucesso.'})
 
-        except EstoqueProduto.DoesNotExist:
-            return JsonResponse({'success': False, 'error': 'Produto não encontrado ou não disponível.'})
         except Exception as e:
-            return JsonResponse({'success': False, 'error': 'Erro ao processar a devolução.'})
+            return JsonResponse({'success': False, 'error': f'Erro ao processar a devolução: {str(e)}'})
 
 
     

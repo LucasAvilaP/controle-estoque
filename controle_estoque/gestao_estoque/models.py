@@ -74,6 +74,7 @@ class Transacoe(models.Model):
     data_hora = models.DateTimeField(auto_now_add=True)
     origem = models.ForeignKey(Local, related_name='transacao_origem', on_delete=models.SET_NULL, null=True, blank=True)
     destino = models.ForeignKey(Local, related_name='transacao_destino', on_delete=models.SET_NULL, null=True, blank=True)
+    motivo = models.TextField(null=True, blank=True)
     restaurante = models.ForeignKey(Restaurante, on_delete=models.SET_NULL, null=True, blank=True)
     estado_solicitacao = models.CharField(max_length=2, choices=ESTADO_SOLICITACAO, default='PE')
     responsavel_por = models.ForeignKey(
