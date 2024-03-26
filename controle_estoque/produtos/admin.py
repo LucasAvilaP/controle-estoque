@@ -105,6 +105,35 @@ class EstoqueProdutoAdmin(admin.ModelAdmin):
             origem=obj.local
         )
 
+    @admin.action(description='Exportar para Excel')
+    def exportar_para_excel(modeladmin, request, queryset):
+        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename="estoque_produtos.xlsx"'
+
+        workbook = xlsxwriter.Workbook(response, {'in_memory': True})
+        worksheet = workbook.add_worksheet()
+
+        # Cabeçalhos da planilha
+        worksheet.write('A1', 'Nome do Produto')
+        worksheet.write('B1', 'Apelido')
+        worksheet.write('C1', 'Quantidade')
+        worksheet.write('D1', 'Local')
+
+        for idx, estoqueProduto in enumerate(queryset, start=2):
+            nome = estoqueProduto.produto.nome
+            apelido = estoqueProduto.produto.apelido  # Acessando o apelido através da relação com Produto
+            quantidade = estoqueProduto.quantidade
+            local = estoqueProduto.local.nome
+
+            worksheet.write(f'A{idx}', nome)
+            worksheet.write(f'B{idx}', apelido)
+            worksheet.write(f'C{idx}', quantidade)
+            worksheet.write(f'D{idx}', local)
+
+        workbook.close()
+
+        return response
+
 @admin.register(HistoricoContagem)
 class HistoricoContagemAdmin(admin.ModelAdmin):
     list_display = ('produto', 'local', 'data_contagem', 'quantidade_contagem')

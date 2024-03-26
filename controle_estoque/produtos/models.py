@@ -36,3 +36,4 @@ class HistoricoContagem(models.Model):
     class Meta:
         ordering = ['-data_contagem']
         get_latest_by = 'data_contagem'
+ 

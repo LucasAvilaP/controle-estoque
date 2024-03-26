@@ -5,6 +5,7 @@ from django.shortcuts import render, redirect
 from django.views.decorators.http import require_http_methods
 import json
 from gestao_estoque.models import Restaurante
+from .models import AcessoRestaurante
 
 @api_view(['POST'])
 def login_view(request):
@@ -43,9 +44,14 @@ def login_page(request):
 
         user = authenticate(request, username=username, password=password)
         if user is not None and user.is_active:
-            login(request, user)
             try:
                 restaurante = Restaurante.objects.get(nome=restaurante_nome)
+                # Verifica se o usuário tem acesso ao restaurante selecionado
+                if not AcessoRestaurante.objects.filter(usuario=user, restaurante=restaurante).exists():
+                    # Se o usuário não tem acesso, retorna um erro
+                    return JsonResponse({'error': 'Você não tem acesso a este restaurante.'}, status=403)
+                
+                login(request, user)
                 request.session['restaurante_id'] = restaurante.id
                 return JsonResponse({'redirect': True, 'redirect_url': '/pagina_inicial/'})
             except Restaurante.DoesNotExist:

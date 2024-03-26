@@ -46,7 +46,7 @@ def pagina_inicial(request):
     # Passe o nome do restaurante no contexto para a template
     context = {
         'alertas': alertas,
-        'restaurante_nome': restaurante_nome,  # Adicionado aqui
+        'restaurante_nome': restaurante_nome,
     }
     return render(request, 'gestao_estoque/pagina-inicial.html', context)
 
