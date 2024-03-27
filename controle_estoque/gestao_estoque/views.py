@@ -66,6 +66,31 @@ def buscar_produtos(request):
     return JsonResponse([], safe=False)
 
 
+
+@login_required
+def verificar_permissao(request):
+    # Supondo que a ação desejada seja enviada via POST ou GET como 'acao'
+    acao = request.GET.get('acao', '')  # ou request.POST.get('acao', '')
+
+    # Mapeia ações recebidas para os nomes das permissões correspondentes
+    mapa_acoes_permissoes = {
+        'atualizar': 'gestao_estoque.can_update',
+        'registrar_perda': 'gestao_estoque.can_register_loss',
+        'realizar_emprestimo': 'gestao_estoque.can_loan',
+        'realizar_devolucao': 'gestao_estoque.can_return',
+        # Adicione mais mapeamentos conforme necessário
+    }
+
+    permissao_requerida = mapa_acoes_permissoes.get(acao, '')
+
+    if permissao_requerida and request.user.has_perm(permissao_requerida):
+        # O usuário tem permissão
+        return JsonResponse({'tem_permissao': True})
+    else:
+        # O usuário não tem permissão
+        return JsonResponse({'tem_permissao': False})
+
+
 @require_http_methods(["POST"])
 def atualizar_quantidade(request):
     data = json.loads(request.body)

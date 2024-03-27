@@ -167,87 +167,107 @@
 
       const csrftoken = getCookie('csrftoken');
 
+      function verificarPermissaoEExecutar(acao, callback) {
+        fetch(`/pagina_inicial/verificar_permissao/?acao=${acao}`, {
+            method: 'GET',
+            headers: {
+                'X-CSRFToken': csrftoken,
+            },
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Erro na requisição: ' + response.statusText);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.tem_permissao) {
+                callback(); // Executa a função de callback se tiver permissão
+            } else {
+                alert('Você não tem permissão para realizar esta ação.');
+            }
+        })
+        .catch(error => console.error('Erro ao verificar permissão:', error));
+    }
+    
       function adicionarQuantidade() {
-        // Obter os valores dos inputs
-        var nomeProduto = document.getElementById('campo_produto').value;
-        var quantidadeAdicionar =
-          document.getElementById('campo_quantidade').value;
-        var dataContagem = document.getElementById('campo_data').value;
+        verificarPermissaoEExecutar('atualizar', function() {
+            // Obter os valores dos inputs
+            var nomeProduto = document.getElementById('campo_produto').value;
+            var quantidadeAdicionar = document.getElementById('campo_quantidade').value;
+            var dataContagem = document.getElementById('campo_data').value;
+    
+            // Verificar se os campos estão preenchidos
+            if (!nomeProduto || !quantidadeAdicionar || !dataContagem) {
+                alert('Por favor, preencha todos os campos.');
+                return;
+            }
+    
+            // Enviar requisição para o servidor
+            fetch('atualizar_quantidade/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken,
+                },
+                body: JSON.stringify({
+                    nome: nomeProduto,
+                    quantidade: quantidadeAdicionar,
+                    data_contagem: dataContagem,
+                }),
+            })
+            .then((response) => response.json())
+            .then((data) => {
+                if (data.success) {
+                    alert('Quantidade atualizada com sucesso.');
+                    window.location.reload(); // Recarrega a página
+                } else {
+                    alert('Erro ao atualizar quantidade: ' + data.error);
+                }
+            })
+            .catch((error) => console.error('Erro na requisição:', error));
+        });
+    }
+    
 
-        // Verificar se os campos estão preenchidos
-        if (!nomeProduto || !quantidadeAdicionar || !dataContagem) {
-          alert('Por favor, preencha todos os campos.');
-          return;
-        }
-
-        // Enviar requisição para o servidor
-        fetch('atualizar_quantidade/', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            // Adicione aqui o token CSRF se for necessário
-            'X-CSRFToken': csrftoken,
-          },
-          body: JSON.stringify({
-            nome: nomeProduto,
-            quantidade: quantidadeAdicionar,
-            data_contagem: dataContagem,
-          }),
-        })
+    function diminuirQuantidade() {
+      verificarPermissaoEExecutar('registrar_perda', function() {
+          // Obter os valores dos inputs
+          var nomeProduto = document.getElementById('campo_produto').value;
+          var quantidadeDiminuir = document.getElementById('campo_quantidade').value;
+          var motivo = document.getElementById('campo_motivo').value; // Captura o valor do motivo
+  
+          // Verificar se os campos estão preenchidos
+          if (!nomeProduto || !quantidadeDiminuir) {
+              alert('Por favor, preencha todos os campos.');
+              return;
+          }
+  
+          // Enviar requisição para o servidor
+          fetch('diminuir_quantidade/', {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+                  'X-CSRFToken': csrftoken,
+              },
+              body: JSON.stringify({
+                  nome: nomeProduto,
+                  quantidade: quantidadeDiminuir,
+                  motivo: motivo, // Inclui o motivo na requisição
+              }),
+          })
           .then((response) => response.json())
           .then((data) => {
-            if (data.success) {
-              alert('Quantidade atualizada com sucesso.');
-              window.location.reload(); // Recarrega a página
-            } else {
-              alert('Erro ao atualizar quantidade: ' + data.error);
-            }
+              if (data.success) {
+                  alert('Quantidade diminuída com sucesso e motivo registrado.');
+                  window.location.reload(); // Recarrega a página
+              } else {
+                  alert('Erro ao atualizar quantidade: ' + data.error);
+              }
           })
-          .catch((error) => {
-            console.error('Erro na requisição:', error);
-          });
-      }
-
-      function diminuirQuantidade() {
-        // Obter os valores dos inputs
-        var nomeProduto = document.getElementById('campo_produto').value;
-        var quantidadeDiminuir = document.getElementById('campo_quantidade').value;
-        var motivo = document.getElementById('campo_motivo').value; // Captura o valor do motivo
-      
-        // Verificar se os campos estão preenchidos
-        if (!nomeProduto || !quantidadeDiminuir) {
-          alert('Por favor, preencha todos os campos.');
-          return;
-        }
-        console.log(quantidadeDiminuir)
-      
-        // Enviar requisição para o servidor
-        fetch('diminuir_quantidade/', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': csrftoken,
-          },
-          body: JSON.stringify({
-            nome: nomeProduto,
-            quantidade: quantidadeDiminuir,
-            motivo: motivo, // Inclui o motivo na requisição
-          }),
-        })
-          .then((response) => response.json())
-          .then((data) => {
-            if (data.success) {
-              alert('Quantidade diminuída com sucesso e motivo registrado.');
-              window.location.reload(); // Recarrega a página
-            } else {
-              alert('Erro ao atualizar quantidade: ' + data.error);
-            }
-          })
-          .catch((error) => {
-            console.error('Erro na requisição:', error);
-          });
-          
-      }
+          .catch((error) => console.error('Erro na requisição:', error));
+      });
+  }
       
 
       document
@@ -283,74 +303,82 @@
         });
 
         function realizarEmprestimo() {
-          var nomeProduto = document.getElementById('campo_produto').value;
-          var quantidade = document.getElementById('campo_quantidade').value;
-          var motivo = document.getElementById('campo_motivo').value;
-          // Outros campos necessários para a operação de empréstimo
+          verificarPermissaoEExecutar('realizar_emprestimo', function() {
+              var nomeProduto = document.getElementById('campo_produto').value;
+              var quantidade = document.getElementById('campo_quantidade').value;
+              var motivo = document.getElementById('campo_motivo').value;
       
-          if (!nomeProduto || !quantidade) {
-              alert('Por favor, preencha todos os campos necessários.');
-              return;
-          }
+              if (!nomeProduto || !quantidade) {
+                  alert('Por favor, preencha todos os campos necessários.');
+                  return;
+              }
       
-          // Substitua 'emprestimo/' pelo endpoint correto do seu backend
-          fetch('realizar_emprestimo/', {
-              method: 'POST',
-              headers: {
-                  'Content-Type': 'application/json',
-                  'X-CSRFToken': csrftoken,
-              },
-              body: JSON.stringify({
-                  nome: nomeProduto,
-                  quantidade: quantidade,
-                  motivo: motivo,
-                  // Outros dados necessários
-              }),
-          })
-          .then(response => response.json())
-          .then(data => {
-              // Trate a resposta do servidor aqui
-              alert('Solicitação de empréstimo criada com sucesso. Aguardando aprovação.');
-          })
-          .catch(error => {
-              console.error('Erro na requisição:', error);
+              fetch('realizar_emprestimo/', {
+                  method: 'POST',
+                  headers: {
+                      'Content-Type': 'application/json',
+                      'X-CSRFToken': csrftoken,
+                  },
+                  body: JSON.stringify({
+                      nome: nomeProduto,
+                      quantidade: quantidade,
+                      motivo: motivo,
+                  }),
+              })
+              .then(response => response.json())
+              .then(data => {
+                  if (data.success) {
+                      alert('Solicitação de empréstimo criada com sucesso. Aguardando aprovação.');
+                      window.location.reload(); // Recarrega a página
+                  } else {
+                      alert('Erro na solicitação de empréstimo: ' + data.error);
+                  }
+              })
+              .catch(error => {
+                  console.error('Erro na requisição:', error);
+              });
           });
       }
+      
       
       function realizarDevolucao() {
-          var nomeProduto = document.getElementById('campo_produto').value;
-          var quantidade = document.getElementById('campo_quantidade').value;
-          var motivo = document.getElementById('campo_motivo').value;
-          // Outros campos necessários para a operação de devolução
-      
-          if (!nomeProduto || !quantidade) {
-              alert('Por favor, preencha todos os campos necessários.');
-              return;
-          }
-      
-          // Substitua 'devolucao/' pelo endpoint correto do seu backend
-          fetch('realizar_devolucao/', {
-              method: 'POST',
-              headers: {
-                  'Content-Type': 'application/json',
-                  'X-CSRFToken': csrftoken,
-              },
-              body: JSON.stringify({
-                  nome: nomeProduto,
-                  quantidade: quantidade,
-                  motivo: motivo,
-                  // Outros dados necessários
-              }),
-          })
-          .then(response => response.json())
-          .then(data => {
-              // Trate a resposta do servidor aqui
-              alert('Devolução realizada com sucesso.');
-          })
-          .catch(error => {
-              console.error('Erro na requisição:', error);
-          });
-      }
+        verificarPermissaoEExecutar('realizar_devolucao', function() {
+            var nomeProduto = document.getElementById('campo_produto').value;
+            var quantidade = document.getElementById('campo_quantidade').value;
+            var motivo = document.getElementById('campo_motivo').value;
+    
+            if (!nomeProduto || !quantidade) {
+                alert('Por favor, preencha todos os campos necessários.');
+                return;
+            }
+    
+            fetch('realizar_devolucao/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken,
+                },
+                body: JSON.stringify({
+                    nome: nomeProduto,
+                    quantidade: quantidade,
+                    motivo: motivo,
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Devolução realizada com sucesso.');
+                    window.location.reload(); // Recarrega a página
+                } else {
+                    alert('Erro na devolução: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Erro na requisição:', error);
+            });
+        });
+    }
+    
 
       document.addEventListener('DOMContentLoaded', function() {
         const btns = document.querySelectorAll('.btn-list li');

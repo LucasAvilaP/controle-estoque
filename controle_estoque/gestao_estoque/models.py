@@ -88,8 +88,13 @@ class Transacoe(models.Model):
 
     class Meta:
         permissions = (
-            ('can_approve_transaction', 'Can approve transaction'),
-            ('can_reject_transaction', 'Can reject transaction'),
+            ('can_approve_transaction', 'Pode aprovar transação'),
+            ('can_reject_transaction', 'Pode rejeitar transação'),
+            ('can_update', 'Pode atualizar'),
+            ('can_register_loss', 'Pode registrar perda'),
+            ('can_loan', 'Pode realizar empréstimo'),
+            ('can_return', 'Pode realizar devolução'),
+            # Adicione mais permissões conforme necessário
         )
 
     def __str__(self):
