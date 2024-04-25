@@ -80,7 +80,7 @@
             })
             .then(response => response.json())
             .then(data => {
-                if (data.redirect) {
+                if (data.redirect && data.redirect_url) {
                     // Redirecionar para a página indicada pela resposta do servidor
                     window.location.href = data.redirect_url;
                 } else if (data.error) {
