@@ -44,6 +44,7 @@
           <ul class="btn-list">
             <li onclick="adicionarQuantidade()">Atualizar</li>
             <li onclick="diminuirQuantidade()">Registrar Perda</li>
+            <li onclick="realizarTransacao()">Retirada</li>
             <li onclick="realizarEmprestimo()">Empréstimo</li>
             <li onclick="realizarDevolucao()">Devolução</li>
             <li onclick="administracao()">Administrar</li>
@@ -301,6 +302,49 @@
               alert(error.message);
             });
         });
+
+
+        function realizarTransacao() {
+          verificarPermissaoEExecutar('realizar_transacao', function() {
+            // Aqui, você pode capturar os valores do formulário necessários para realizar a transação.
+            // Estou supondo que você precisará do nome do produto e da quantidade.
+            var nomeProduto = document.getElementById('campo_produto').value;
+            var quantidade = document.getElementById('campo_quantidade').value;
+            var motivo = document.getElementById('campo_motivo').value;
+            
+            if (!nomeProduto || !quantidade) {
+              alert('Por favor, preencha todos os campos necessários.');
+              return;
+            }
+            
+            fetch('realizar-transacao/', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken,
+              },
+              body: JSON.stringify({
+                nome: nomeProduto,
+                quantidade: quantidade,
+                motivo: motivo,
+              }),
+            })
+            .then(response => response.json())
+            .then(data => {
+              if (data.success) {
+                alert('Transação realizada com sucesso.');
+                window.location.reload(); // Recarrega a página
+              } else {
+                alert('Erro na transação: ' + data.error);
+              }
+            })
+            .catch(error => {
+              console.error('Erro na requisição:', error);
+            });
+          });
+        }
+        
+
 
         function realizarEmprestimo() {
           verificarPermissaoEExecutar('realizar_emprestimo', function() {
