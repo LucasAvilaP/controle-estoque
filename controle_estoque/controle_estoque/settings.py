@@ -25,7 +25,7 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure--ba7==#-w@yz7#
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['10.1.1.8', 'utensilios.gruposcenarium.intra', '127.0.0.1']
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition

@@ -28,10 +28,12 @@ class HistoricoLog(models.Model):
         ('EM', 'Empréstimo'),
         ('DE', 'Devolução'),
         ('AT', 'Atualização'),
+        ('TR', 'Transação'),
     )
 
     STATUS_ITEM = (
         ('EM', 'Emprestado'),
+        ('TR', 'Transacionado'),
         ('DI', 'Disponível'),
         ('ND', 'Não Devolvido'),
         ('RJ', 'Rejeitado'),
@@ -92,6 +94,7 @@ class Transacoe(models.Model):
             ('can_reject_transaction', 'Pode rejeitar transação'),
             ('can_update', 'Pode atualizar'),
             ('can_register_loss', 'Pode registrar perda'),
+            ('can_transact', 'Pode realizar transação'),
             ('can_loan', 'Pode realizar empréstimo'),
             ('can_return', 'Pode realizar devolução'),
             # Adicione mais permissões conforme necessário

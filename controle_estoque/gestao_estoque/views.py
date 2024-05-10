@@ -3,10 +3,11 @@
 import csv
 import xlsxwriter
 from datetime import date
+import logging
 from django.shortcuts import render
 from django.db import transaction
 from django.db.models import F, Q
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
 from django.views.decorators.http import require_http_methods, require_POST
 from django.http import JsonResponse, HttpResponse
 from produtos.models import Produto, HistoricoContagem, EstoqueProduto, Local
@@ -24,7 +25,8 @@ from io import BytesIO
 import json
 from . import views
 
-
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 
 @login_required
@@ -76,6 +78,7 @@ def verificar_permissao(request):
     mapa_acoes_permissoes = {
         'atualizar': 'gestao_estoque.can_update',
         'registrar_perda': 'gestao_estoque.can_register_loss',
+        'realizar_transacao': 'gestao_estoque.can_transact',
         'realizar_emprestimo': 'gestao_estoque.can_loan',
         'realizar_devolucao': 'gestao_estoque.can_return',
         # Adicione mais mapeamentos conforme necessário
@@ -203,6 +206,61 @@ def diminuir_quantidade(request):
 
 
 
+@require_http_methods(["POST"])
+@login_required
+def realizar_transacao(request):
+    try:
+        data = json.loads(request.body)
+        nome_produto = data.get('nome')
+        quantidade = int(data.get('quantidade'))
+        motivo = data.get('motivo', '')
+        restaurante_id = request.session.get('restaurante_id')
+        
+        if not nome_produto or quantidade <= 0:
+            return JsonResponse({'success': False, 'error': 'Dados inválidos.'}, status=400)
+        
+        with transaction.atomic():
+            estoque_central = Local.objects.get(nome='Estoque Central')
+            local_destino = Local.objects.get(restaurante__id=restaurante_id)
+            
+            # Tenta encontrar o produto no estoque central pelo nome ou apelido
+            produto = Produto.objects.get(Q(nome__iexact=nome_produto) | Q(apelido__iexact=nome_produto))
+            estoque_produto_central = EstoqueProduto.objects.get(produto=produto, local=estoque_central)
+            
+            if estoque_produto_central.quantidade < quantidade:
+                return JsonResponse({'success': False, 'error': 'Quantidade solicitada não está disponível no estoque central.'}, status=400)
+            
+            estoque_produto_central.quantidade -= quantidade
+            estoque_produto_central.save()
+            
+            estoque_produto_destino, created = EstoqueProduto.objects.get_or_create(produto=produto, local=local_destino)
+            estoque_produto_destino.quantidade += quantidade
+            estoque_produto_destino.save()
+            
+            HistoricoLog.objects.create(
+                produto=produto,
+                usuario=request.user,
+                quantidade=quantidade,
+                origem=estoque_central,
+                destino=local_destino,
+                tipo='TR',
+                motivo=motivo
+            )
+            
+            return JsonResponse({'success': True, 'message': 'Transação realizada com sucesso.'})
+    
+    except Produto.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Produto não encontrado.'}, status=404)
+    except Local.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Local não encontrado.'}, status=404)
+    except Exception as e:
+        logger.exception("Erro inesperado ao realizar a transação: {}".format(str(e)))
+        return JsonResponse({'success': False, 'error': 'Erro ao realizar a transação.'}, status=500)
+
+
+
+
+
 @login_required
 def realizar_emprestimo(request):
     data = json.loads(request.body)
@@ -304,7 +362,7 @@ def exportar_produtos_xlsx(request):
     workbook = xlsxwriter.Workbook(output)
     worksheet = workbook.add_worksheet()
 
-    # Formatos
+    # Define formats
     header_format = workbook.add_format({
         'bold': True,
         'text_wrap': True,
@@ -319,72 +377,59 @@ def exportar_produtos_xlsx(request):
         'num_format': '0'
     })
 
-    # Ajustar larguras das colunas
+    # Set column widths
     worksheet.set_column('A:A', 20)
     worksheet.set_column('B:E', 15)
 
-    # Cabeçalhos com formato
+    # Write headers
     worksheet.write('A1', 'Nome do Produto', header_format)
     worksheet.write('B1', 'Apelido', header_format)
     worksheet.write('C1', 'Quantidade Atual', header_format)
     worksheet.write('D1', 'Última Contagem', header_format)
     worksheet.write('E1', 'Diferença', header_format)
 
-    # Congelar painéis
-    worksheet.freeze_panes(1, 0)
+    worksheet.freeze_panes(1, 0)  # Freeze top row
 
-    # Busca os produtos
+    # Fetch products
     produtos_estoque = EstoqueProduto.objects.filter(local__restaurante_id=restaurante_id).order_by('produto__nome')
 
-    # Iterar sobre os produtos
     for idx, estoque in enumerate(produtos_estoque, start=2):
-        ultima_contagem = HistoricoContagem.objects.filter(
+        contagens = HistoricoContagem.objects.filter(
             produto=estoque.produto,
-            local=estoque.local,
-            data_contagem__lt=timezone.now().date()
-        ).order_by('-data_contagem').first()
+            local=estoque.local
+        ).order_by('-data_contagem')[:2]  # Get the last two contagem records
 
-        quantidade_ultima_contagem = ultima_contagem.quantidade_contagem if ultima_contagem else 0
-        diferenca = estoque.quantidade - quantidade_ultima_contagem
+        if len(contagens) == 2:
+            ultima_contagem = contagens[1].quantidade_contagem  # Use the second last as the "last"
+            penultima_contagem = contagens[0].quantidade_contagem
+            diferenca = penultima_contagem - ultima_contagem
+        else:
+            ultima_contagem = contagens[0].quantidade_contagem if contagens else 0
+            diferenca = 0
 
+        # Write data to cells
         worksheet.write(idx, 0, estoque.produto.nome, cell_format)
         worksheet.write(idx, 1, estoque.produto.apelido, cell_format)
         worksheet.write(idx, 2, estoque.quantidade, cell_format)
-        worksheet.write(idx, 3, quantidade_ultima_contagem, cell_format)
+        worksheet.write(idx, 3, ultima_contagem, cell_format)
         worksheet.write(idx, 4, diferenca, cell_format)
 
-    # Final do loop
-    end_row = idx
+    end_row = idx + 1
 
-    end_row += 1
-
-    # Crie um gráfico de colunas
+    # Insert a chart
     chart = workbook.add_chart({'type': 'column'})
-
-    # Configure a série do gráfico
     chart.add_series({
         'name': 'Diferença',
         'categories': f'=Sheet1!$A$2:$A${end_row}',
         'values': f'=Sheet1!$E$2:$E${end_row}',
     })
-
-    chart.set_x_axis({
-    'name': 'Produtos',
-    'label_position': 'low',
-    'num_font': {'rotation': 45},
-})
-
-    # Adicione um título ao gráfico e defina o nome dos eixos
+    chart.set_x_axis({'name': 'Produtos', 'label_position': 'low', 'num_font': {'rotation': 45}})
     chart.set_title({'name': 'Diferença de Contagem dos Produtos'})
     chart.set_y_axis({'name': 'Diferença na Quantidade'})
+    worksheet.insert_chart('H2', chart)  # Adjust the position of the chart
 
-    # Insira o gráfico na planilha ajustando a posição baseada no número de produtos
-    chart_position = f'H{end_row + 2}'  # Ajuste para inserir o gráfico abaixo dos dados
-    worksheet.insert_chart(chart_position, chart)
-
-    # Fechar o workbook
     workbook.close()
     output.seek(0)
-
     response.write(output.read())
     return response
+
